@@ -5,9 +5,12 @@
 //    when the app is installable; we keep that event and replay it from our button.
 //  - Safari (iOS and macOS) and Firefox have no in-page install API; the UI shows
 //    manual instructions instead (see src/lib/installPlatform.js).
+//  - The Android app (Capacitor) is already installed and ships its files in the APK,
+//    so it counts as standalone and registers no service worker.
 
 import { useSyncExternalStore } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { isNativeApp } from './lib/platform.js';
 
 const HOUR = 60 * 60 * 1000;
 const STANDALONE_QUERIES = [
@@ -25,6 +28,7 @@ let updateServiceWorker = null;
 
 /** True when Habit is running as an installed app rather than in a browser tab. */
 export const isStandalone = () =>
+  isNativeApp ||
   STANDALONE_QUERIES.some((query) => window.matchMedia(query).matches) || window.navigator.standalone === true;
 
 const listeners = new Set();
@@ -49,6 +53,7 @@ const subscribe = (listener) => {
 };
 
 export function setupPWA() {
+  if (isNativeApp) return;
   window.addEventListener('beforeinstallprompt', (event) => {
     // Keep the browser's own mini-infobar from appearing; the user installs from our button.
     event.preventDefault();

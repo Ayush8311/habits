@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Habit's palette (src/styles/tokens.css and assets/habit-icon.svg). -->
+<resources>
+    <color name="colorPrimary">#4A9466</color>
+    <color name="colorPrimaryDark">#3B7F57</color>
+    <color name="colorAccent">#4A9466</color>
+    <!-- The app's warm white background, shown behind the splash icon and before the page draws. -->
+    <color name="habit_background">#F6F5F1</color>
+</resources>

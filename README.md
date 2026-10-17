@@ -6,6 +6,7 @@ the same data:
 - **Desktop** (wider than 820px): overview, full monthly grid and insights on one page.
 - **Mobile** (820px and narrower): an installable app with Today, Calendar, Insights and
   Settings tabs, built to live on your phone's home screen and work offline.
+- **Android app**: the same app packaged with Capacitor as an APK (see [Android app](#android-app)).
 
 ## Run locally
 
@@ -75,8 +76,11 @@ changelog and `habit-vX.Y.Z-web.zip` (a static build for self-hosting). Tags are
 a fix after a release gets the next patch version. Re-running the workflow for an existing
 release changes nothing.
 
-Habit is installed from the website, not from the release: GitHub Releases is the version
-history. Deploying the website (`deploy-pages.yml`) is separate from releasing.
+The same tag also starts `.github/workflows/android-apk.yml`, which builds the signed Android
+APK and attaches it to that release (see [Android app](#android-app)).
+
+The web app is installed from the website; Android users can also download the APK from the
+release. Deploying the website (`deploy-pages.yml`) is separate from releasing.
 
 ## Install the app
 
@@ -98,6 +102,118 @@ replaced by "Installed" there.
   (On Android and desktop, the installed app shares data with the browser.)
 - **In-app browsers** (links opened inside Instagram, Facebook, Gmail and similar) can't install
   web apps; the Install App button explains how to open the page in Safari or Chrome.
+
+## Android app
+
+The same React app also ships as a native Android app built with
+[Capacitor](https://capacitorjs.com). The APK contains the production build (`dist/`) and
+loads it locally from `https://localhost` inside the app — never from the website — so it
+works offline from the first launch. In the app there is no service worker or install
+button; backups are saved through Android's share sheet.
+
+- App ID: `com.ayush8311.habit` (the debug build is `com.ayush8311.habit.debug`, named
+  "Habit Debug", and installs alongside it). Android 7.0 (API 24) or newer.
+- `capacitor.config.json` configures Capacitor; `android/` is the native project.
+- Version: `versionName` is `package.json`'s `version`, and
+  `versionCode = MAJOR×10000 + MINOR×100 + PATCH` (1.0.1 → 10001), set in
+  `android/app/build.gradle`. Bump `package.json` and both follow.
+- Icons and launch screen come from `assets/habit-icon.svg` via `npm run icons`.
+- Permissions: only `INTERNET` (Capacitor's default; Habit makes no network requests).
+
+### Set up Android tools (once)
+
+1. Install [Android Studio](https://developer.android.com/studio). Its setup wizard installs
+   the Android SDK; afterwards, in **Settings → Languages & Frameworks → Android SDK**, make
+   sure **Android 16 (API 36)** and **Android SDK Build-Tools 36** are installed.
+2. Install JDK 21 (Android Studio's bundled JDK works), and set
+   `export ANDROID_HOME="$HOME/Library/Android/sdk"` (macOS default) in your shell profile.
+
+### Build and run locally
+
+```bash
+npm run android:sync     # npm run build + npx cap sync android (do this after every web change)
+npx cap open android     # open in Android Studio, then Run ▶ on a device or emulator
+npm run android:debug    # or build a debug APK from the command line
+```
+
+The debug APK is `android/app/build/outputs/apk/debug/app-debug.apk`. Install it with
+`adb install -r android/app/build/outputs/apk/debug/app-debug.apk`, or copy it to a phone.
+
+### Release signing
+
+Release APKs are signed with Habit's own release key. Android only installs an update over
+an existing app if it is signed with the **same** key, so create it once and keep it safe:
+if it is lost, users must uninstall (and lose their in-app data unless they exported a
+backup) to install a newer version.
+
+1. Create the keystore **outside the repository** (it is git-ignored anyway):
+
+   ```bash
+   keytool -genkeypair -v -keystore ~/habit-release.jks -alias habit \
+     -keyalg RSA -keysize 4096 -validity 10000 -dname "CN=Habit"
+   ```
+
+   Choose a strong password. Back up `~/habit-release.jks` and the password somewhere
+   safe (for example a password manager). Never commit it or paste it into an issue.
+
+2. Add four **repository secrets** (GitHub → Settings → Secrets and variables → Actions →
+   Secrets → New repository secret):
+
+   | Secret | Value |
+   |---|---|
+   | `ANDROID_KEYSTORE_BASE64` | output of `base64 -i ~/habit-release.jks` (macOS) or `base64 -w0 ~/habit-release.jks` (Linux) |
+   | `ANDROID_KEYSTORE_PASSWORD` | the keystore password |
+   | `ANDROID_KEY_ALIAS` | `habit` |
+   | `ANDROID_KEY_PASSWORD` | the key password (the same as the keystore password unless you chose another) |
+
+   On macOS, `base64 -i ~/habit-release.jks | pbcopy` copies the value straight to the
+   clipboard.
+
+3. Recommended: add the **repository variable** `ANDROID_SIGNING_CERT_SHA256` (Variables
+   tab) with the fingerprint printed by
+   `keytool -list -v -keystore ~/habit-release.jks -alias habit | grep SHA256:`.
+   The workflow then refuses to publish an APK signed with any other key.
+
+To build a signed APK locally, create `android/keystore.properties` (git-ignored):
+
+```properties
+storeFile=/Users/you/habit-release.jks
+storePassword=…
+keyAlias=habit
+keyPassword=…
+```
+
+then run `npm run android:release`. The APK is
+`android/app/build/outputs/apk/release/app-release.apk`. Without signing configured, a
+release build stops with an error instead of producing an unsigned APK.
+
+### APKs in GitHub Releases
+
+`.github/workflows/android-apk.yml` builds the APK:
+
+- **On a version tag** (`git push origin v1.0.1`): tests, builds and verifies the web app,
+  syncs Capacitor, builds a signed release APK, checks it with `apksigner` and `aapt2`
+  (package name, version, signature, and the certificate if `ANDROID_SIGNING_CERT_SHA256`
+  is set), and attaches `habit-v1.0.1.apk` plus its `.sha256` to the release that
+  `release.yml` publishes for that tag. It never creates a second release and never
+  replaces an APK that is already attached. Missing secrets fail the run with a message.
+- **Manually** (Actions → Android APK → Run workflow): `debug` builds a test APK, `release`
+  a signed one; both are downloadable from the run's **Artifacts** section only.
+
+### Installing the APK on Android
+
+1. Open the release on GitHub (Releases → the latest version) on the phone and download
+   `habit-vX.Y.Z.apk` under **Assets**.
+2. Open the file. Android may ask you to allow your browser or file manager to **install
+   unknown apps** (Settings → Apps → Special app access → Install unknown apps); allow it
+   for that app, go back and tap **Install**. Play Protect may warn about an app that
+   isn't from Google Play.
+3. Updates: download the newer APK from a later release and open it. Because it is signed
+   with the same key and has a higher `versionCode`, it installs over the existing app and
+   keeps your habits.
+
+The app's data is separate from the website's and the PWA's: use Export backup / Import
+backup to move habits between them.
 
 ## Offline and updates
 
@@ -143,8 +259,10 @@ src/
   lib/                       pure logic: dates, stats, insights, storage validation, backup
   pwa.js                     service worker registration, install prompt
 assets/habit-icon.svg        master app icon (edit this, then `npm run icons`)
-scripts/generate-icons.mjs   renders public/ icons from the master: 192/512, maskable 512,
-                             Apple touch 180, favicon 32 and SVG
+scripts/generate-icons.mjs   renders public/ icons from the master (192/512, maskable 512,
+                             Apple touch 180, favicon 32 and SVG) and the Android launcher icons
+capacitor.config.json        Capacitor (Android app) configuration
+android/                     native Android project; web files are copied in by `cap sync`
 ```
 
 ### Data model

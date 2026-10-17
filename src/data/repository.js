@@ -7,14 +7,18 @@
 //   subscribe(listener)  -> unsubscribe()         listener(state) when data changes elsewhere
 //
 // Today the implementation is LocalStorage, so data stays on the device it was
-// recorded on. To add cloud sync later, write another object with the same
+// recorded on. In the Android app each save is also mirrored to native storage
+// (see nativeMirror.js). To add cloud sync later, write another object with the same
 // three methods (for example one that saves locally first and pushes to an API
 // in the background, calling `listener` when remote changes arrive) and pass
 // it to useHabitStore. No component needs to change.
 
 import { STORAGE_KEY, parseState, serializeState } from '../lib/storage.js';
+import { isNativeApp } from '../lib/platform.js';
+import { mirrorSave } from './nativeMirror.js';
 
-export function createLocalRepository(key = STORAGE_KEY) {
+/** `afterSave(raw)` runs after each successful write, with the serialized state. */
+export function createLocalRepository(key = STORAGE_KEY, { afterSave } = {}) {
   return {
     load() {
       try {
@@ -31,7 +35,9 @@ export function createLocalRepository(key = STORAGE_KEY) {
 
     save(state) {
       try {
-        window.localStorage.setItem(key, serializeState(state));
+        const raw = serializeState(state);
+        window.localStorage.setItem(key, raw);
+        afterSave?.(raw);
         return true;
       } catch {
         return false;
@@ -51,4 +57,4 @@ export function createLocalRepository(key = STORAGE_KEY) {
   };
 }
 
-export const habitRepository = createLocalRepository();
+export const habitRepository = createLocalRepository(STORAGE_KEY, isNativeApp ? { afterSave: mirrorSave } : {});

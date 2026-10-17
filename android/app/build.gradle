@@ -1,0 +1,110 @@
+apply plugin: 'com.android.application'
+
+// ── Version ─────────────────────────────────────────────────────────────────
+// package.json is the single source of truth: versionName is its "version" and
+// versionCode is MAJOR*10000 + MINOR*100 + PATCH (1.0.1 → 10001), so every release
+// installs as an update over the previous one.
+def appVersion = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json')).version
+def versionParts = (appVersion =~ /^(\d+)\.(\d+)\.(\d+)(?:-[0-9A-Za-z.-]+)?$/)
+if (!versionParts.matches()) throw new GradleException("package.json version '${appVersion}' is not MAJOR.MINOR.PATCH")
+def (major, minor, patch) = (1..3).collect { versionParts.group(it) as int }
+if (minor > 99 || patch > 99) throw new GradleException("MINOR and PATCH must be below 100 for versionCode (got ${appVersion})")
+def appVersionCode = major * 10000 + minor * 100 + patch
+
+// ── Release signing ─────────────────────────────────────────────────────────
+// The release keystore is never stored in the repository. It is read from
+// environment variables (GitHub Actions secrets in CI) or, for local builds, from
+// android/keystore.properties (git-ignored); see README → Android app.
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file('keystore.properties')
+if (keystorePropsFile.exists()) keystorePropsFile.withInputStream { keystoreProps.load(it) }
+def signingValue = { String env, String prop -> System.getenv(env) ?: keystoreProps.getProperty(prop) }
+def releaseSigning = [
+    storeFile    : signingValue('HABIT_KEYSTORE_FILE', 'storeFile'),
+    storePassword: signingValue('HABIT_KEYSTORE_PASSWORD', 'storePassword'),
+    keyAlias     : signingValue('HABIT_KEY_ALIAS', 'keyAlias'),
+    keyPassword  : signingValue('HABIT_KEY_PASSWORD', 'keyPassword'),
+]
+def hasReleaseSigning = releaseSigning.values().every { it }
+
+android {
+    namespace = "com.ayush8311.habit"
+    compileSdk = rootProject.ext.compileSdkVersion
+    defaultConfig {
+        applicationId "com.ayush8311.habit"
+        minSdkVersion rootProject.ext.minSdkVersion
+        targetSdkVersion rootProject.ext.targetSdkVersion
+        versionCode appVersionCode
+        versionName appVersion
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        aaptOptions {
+             // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
+             // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
+            ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
+        }
+    }
+    signingConfigs {
+        if (hasReleaseSigning) {
+            release {
+                storeFile rootProject.file(releaseSigning.storeFile)
+                storePassword releaseSigning.storePassword
+                keyAlias releaseSigning.keyAlias
+                keyPassword releaseSigning.keyPassword
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            // Installs next to the release app, so testing never touches real habit data.
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
+            // Its name is "Habit Debug" (src/debug/res/values/strings.xml).
+        }
+        release {
+            if (hasReleaseSigning) signingConfig signingConfigs.release
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+// A release build must be signed with the Habit release key; never produce an
+// unsigned "release" APK. Use assembleDebug for a test build without the key.
+gradle.taskGraph.whenReady { graph ->
+    def wantsRelease = graph.allTasks.any { it.project == project && it.name ==~ /(assemble|bundle|package)Release/ }
+    if (wantsRelease && !hasReleaseSigning) {
+        throw new GradleException(
+            'Release signing is not configured. Set HABIT_KEYSTORE_FILE, HABIT_KEYSTORE_PASSWORD, ' +
+            'HABIT_KEY_ALIAS and HABIT_KEY_PASSWORD, or create android/keystore.properties ' +
+            '(see README → Android app). For a test build, run assembleDebug instead.')
+    }
+}
+
+repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
+    implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation project(':capacitor-android')
+    testImplementation "junit:junit:$junitVersion"
+    androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
+    implementation project(':capacitor-cordova-android-plugins')
+}
+
+apply from: 'capacitor.build.gradle'
+
+try {
+    def servicesJSON = file('google-services.json')
+    if (servicesJSON.text) {
+        apply plugin: 'com.google.gms.google-services'
+    }
+} catch(Exception e) {
+    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}

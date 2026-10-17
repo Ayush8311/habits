@@ -1,0 +1,15 @@
+{
+  "appId": "com.ayush8311.habit",
+  "appName": "Habit",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#F6F5F1"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover",
+      "style": "LIGHT"
+    }
+  }
+}
