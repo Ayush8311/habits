@@ -18,7 +18,7 @@ export function HabitLabel({ habit, progress, streak, onEdit }) {
       onClick={onEdit}
       aria-label={`${habit.name}. ${summary}. Current streak ${streak.current} days, best ${streak.best}. Edit habit`}
     >
-      <HabitIcon icon={habit.icon} color={habit.color} />
+      <HabitIcon icon={habit.icon} emoji={habit.emoji} color={habit.color} />
       <span className="habit-label-text">
         <span className="habit-label-name">{habit.name}</span>
         <span className="habit-label-meta tabular" aria-hidden="true">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ChevronRight, Flame } from 'lucide-react';
 import { HabitIcon } from '../components/calendar/HabitIcon.jsx';
+import { habitColorStyle } from '../lib/habitOptions.js';
 import { cx } from '../lib/classNames.js';
 import { tapFeedback } from '../lib/haptics.js';
 import './HabitCheckRow.css';
@@ -39,6 +40,7 @@ export function HabitCheckRow({
       <button
         type="button"
         className={cx('check-row', done && 'is-done', disabled && 'is-disabled')}
+        style={habitColorStyle(habit.color)}
         aria-pressed={editing || disabled ? undefined : done}
         aria-label={label}
         disabled={disabled}
@@ -52,7 +54,7 @@ export function HabitCheckRow({
           onToggle();
         }}
       >
-        <HabitIcon icon={habit.icon} color={habit.color} size="lg" />
+        <HabitIcon icon={habit.icon} emoji={habit.emoji} color={habit.color} size="lg" />
         <span className="check-row-text">
           <span className="check-row-name">{habit.name}</span>
           <span className={cx('check-row-meta', meta.hot && 'is-hot')} aria-hidden="true">

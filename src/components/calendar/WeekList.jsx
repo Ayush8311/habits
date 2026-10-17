@@ -1,5 +1,6 @@
 import { cx } from '../../lib/classNames.js';
 import { formatFullDate, formatWeekday } from '../../lib/dates.js';
+import { habitColorStyle } from '../../lib/habitOptions.js';
 import { CompletionButton } from './CompletionButton.jsx';
 import { HabitLabel } from './HabitLabel.jsx';
 import './WeekList.css';
@@ -39,6 +40,7 @@ export function WeekList({ habits, completions, days, todayKey, habitStats, onTo
                     done={record?.[day.key] === true}
                     future={day.key > todayKey}
                     today={day.key === todayKey}
+                    colorStyle={habitColorStyle(habit.color)}
                     label={`${habit.name}, ${formatFullDate(day.key)}`}
                     onToggle={() => onToggle(habit.id, day.key)}
                   />

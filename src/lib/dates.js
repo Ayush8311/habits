@@ -105,6 +105,7 @@ const formatters = {
   monthLong: formatter({ month: 'long' }),
   monthDay: formatter({ month: 'short', day: 'numeric' }),
   fullDate: formatter({ weekday: 'long', month: 'long', day: 'numeric' }),
+  fullDateWithYear: formatter({ weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
   weekday: {
     narrow: formatter({ weekday: 'narrow' }),
     short: formatter({ weekday: 'short' }),
@@ -116,6 +117,8 @@ export const formatMonthYear = (key) => formatters.monthYear.format(parseDateKey
 export const formatMonthName = (key) => formatters.monthLong.format(parseDateKey(key));
 export const formatMonthDay = (key) => formatters.monthDay.format(parseDateKey(key));
 export const formatFullDate = (key) => formatters.fullDate.format(parseDateKey(key));
+/** "Saturday, October 17, 2026" */
+export const formatFullDateWithYear = (key) => formatters.fullDateWithYear.format(parseDateKey(key));
 export const formatWeekday = (key, style = 'short') =>
   formatters.weekday[style].format(parseDateKey(key));
 

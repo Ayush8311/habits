@@ -120,3 +120,12 @@
     --size: 36px;
   }
 }
+
+.check.has-habit-color.is-done,
+.check.has-habit-color.is-done:hover {
+  background: var(--habit-color);
+  color: var(--habit-on);
+}
+.check.has-habit-color.is-done:hover {
+  filter: brightness(0.94);
+}

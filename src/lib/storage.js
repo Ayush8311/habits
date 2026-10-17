@@ -4,7 +4,7 @@
 // src/data/repository.js.
 
 import { isDateKey } from './dates.js';
-import { DEFAULT_COLOR, DEFAULT_ICON, MAX_NAME_LENGTH, isHabitColor, isHabitIcon } from './habitOptions.js';
+import { DEFAULT_COLOR, DEFAULT_ICON, MAX_NAME_LENGTH, isEmoji, isHabitIcon, normalizeHex, isPresetColor } from './habitOptions.js';
 
 export const STORAGE_KEY = 'habit.state.v1';
 export const SCHEMA_VERSION = 1;
@@ -16,8 +16,10 @@ function sanitizeHabit(raw) {
   return {
     id: raw.id,
     name,
+    // `icon` is always kept as a fallback; `emoji`, when present, is shown instead.
     icon: isHabitIcon(raw.icon) ? raw.icon : DEFAULT_ICON,
-    color: isHabitColor(raw.color) ? raw.color : DEFAULT_COLOR,
+    emoji: isEmoji(raw.emoji) ? raw.emoji : null,
+    color: isPresetColor(raw.color) ? raw.color : (normalizeHex(raw.color) ?? DEFAULT_COLOR),
     createdAt: isDateKey(raw.createdAt) ? raw.createdAt : null,
   };
 }

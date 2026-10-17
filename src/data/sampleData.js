@@ -35,7 +35,7 @@ export function createSampleState(todayKey) {
   const completions = {};
 
   SAMPLE_HABITS.forEach((sample, index) => {
-    const habit = { id: createId(), name: sample.name, icon: sample.icon, color: sample.color, createdAt };
+    const habit = { id: createId(), name: sample.name, icon: sample.icon, emoji: null, color: sample.color, createdAt };
     const random = mulberry32(index * 7919 + 101);
     const record = {};
 

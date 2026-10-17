@@ -93,3 +93,9 @@
   flex: none;
   color: var(--color-text-tertiary);
 }
+
+/* The habit's own colour marks it done. */
+.check.check-row-box.is-done {
+  background: var(--habit-color);
+  color: var(--habit-on);
+}

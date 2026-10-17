@@ -15,7 +15,7 @@
 .today-greeting {
   font-size: 13px;
   font-weight: 500;
-  color: var(--color-text-secondary);
+  color: var(--color-accent-text);
 }
 .today-count {
   margin-top: 2px;

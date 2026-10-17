@@ -15,6 +15,7 @@ import {
   getMonthOf,
   getRecentDays,
 } from '../../lib/dates.js';
+import { habitColorStyle } from '../../lib/habitOptions.js';
 import { buildInsights } from '../../lib/insights.js';
 import {
   countCompletedOn,
@@ -206,8 +207,8 @@ export function InsightsScreen({ store, todayKey }) {
           {perHabit.map(({ habit, progress, streak }) => {
             const percent = toPercent(progress.rate);
             return (
-              <li key={habit.id} className="habit-progress-row">
-                <HabitIcon icon={habit.icon} color={habit.color} />
+              <li key={habit.id} className="habit-progress-row" style={habitColorStyle(habit.color)}>
+                <HabitIcon icon={habit.icon} emoji={habit.emoji} color={habit.color} />
                 <div className="habit-progress-body">
                   <div className="habit-progress-top">
                     <span className="habit-progress-name">{habit.name}</span>

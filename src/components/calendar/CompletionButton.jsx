@@ -3,7 +3,7 @@ import { cx } from '../../lib/classNames.js';
 import './CompletionButton.css';
 
 /** The rounded-square check used everywhere a habit/day pair can be toggled. */
-export function CompletionButton({ done, future, today, label, size = 'md', onToggle, ...props }) {
+export function CompletionButton({ done, future, today, label, size = 'md', colorStyle, onToggle, ...props }) {
   const [animating, setAnimating] = useState(false);
 
   return (
@@ -16,7 +16,9 @@ export function CompletionButton({ done, future, today, label, size = 'md', onTo
         future && 'is-future',
         today && 'is-today',
         animating && 'is-animating',
+        colorStyle && 'has-habit-color',
       )}
+      style={colorStyle}
       aria-label={future ? `${label} (upcoming)` : label}
       aria-pressed={future ? undefined : done}
       disabled={future}

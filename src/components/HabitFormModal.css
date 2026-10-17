@@ -29,7 +29,7 @@
   align-items: center;
   gap: var(--space-3);
   height: 48px;
-  padding: 0 var(--space-3) 0 10px;
+  padding: 0 var(--space-3) 0 var(--space-4);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-lg);
   background: var(--color-surface-muted);
@@ -69,6 +69,7 @@
 .icon-options {
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-auto-rows: 1fr; /* keeps the wide "Choose" tile as tall as the icons */
   gap: var(--space-2);
 }
 .color-options {
@@ -110,8 +111,8 @@
   color: var(--color-text);
 }
 .option input:checked + .icon-option {
-  background: color-mix(in srgb, var(--habit-color) 14%, white);
-  color: var(--habit-color);
+  background: var(--habit-soft);
+  color: var(--habit-ink);
   box-shadow: inset 0 0 0 1.5px var(--habit-color);
 }
 
@@ -174,4 +175,221 @@
   .habit-stats-item {
     padding: 0 var(--space-3);
   }
+}
+
+/* Live preview, styled like a Today row */
+.habit-preview {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.habit-preview-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.habit-preview-name {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 500;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.habit-preview-name.is-placeholder {
+  color: var(--color-text-tertiary);
+}
+.habit-preview-meta {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+.check.habit-preview-check {
+  --size: 34px;
+  flex: none;
+  border-radius: 10px;
+  pointer-events: none;
+  background: var(--habit-color);
+  color: var(--habit-on);
+  transition: background-color var(--duration) var(--ease-out);
+}
+
+/* "Choose" emoji tile: two icon tiles wide, same height */
+.emoji-choose {
+  grid-column: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 0;
+  padding: 0 var(--space-2);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-size: var(--text-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+.emoji-choose:hover {
+  background: color-mix(in srgb, var(--color-accent) 18%, white);
+}
+.emoji-choose:active {
+  transform: scale(0.97);
+}
+.emoji-choose:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--color-accent);
+}
+.emoji-choose.is-selected {
+  border-color: var(--habit-color);
+  background: var(--habit-soft);
+  color: var(--habit-ink);
+  box-shadow: inset 0 0 0 0.5px var(--habit-color);
+}
+.emoji-choose-glyph {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--font-sans);
+  font-size: 20px;
+  line-height: 1;
+}
+
+/* Custom colour */
+.color-options {
+  align-items: center;
+}
+.custom-color-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: conic-gradient(from 0deg, #e0675a, #e0b04a, #7cbf6a, #4fa7b8, #6b78d6, #b26bc4, #e0675a);
+  cursor: pointer;
+  transition:
+    transform var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+.custom-color-toggle:active {
+  transform: scale(0.94);
+}
+.custom-color-wheel {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.custom-color-toggle.is-selected {
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--swatch);
+}
+.custom-color-toggle.is-selected .custom-color-wheel {
+  background: var(--swatch);
+  box-shadow: 0 0 0 2px var(--color-surface);
+}
+.custom-color-toggle:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--color-accent);
+}
+
+.custom-color-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  margin-top: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+  animation: fade-in var(--duration) var(--ease-out);
+}
+.custom-color-native {
+  position: relative;
+  flex: none;
+  cursor: pointer;
+}
+.custom-color-native input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.custom-color-native-face {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  color: rgba(255, 255, 255, 0.92);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+.custom-color-native-face svg {
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+}
+.custom-color-native:has(input:focus-visible) .custom-color-native-face {
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--color-accent);
+}
+
+.custom-color-hex {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 140px;
+  height: 44px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.custom-color-hex:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
+}
+.custom-color-hex-label {
+  padding: 0 var(--space-2) 0 var(--space-3);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.04em;
+}
+.custom-color-hex input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 16px;
+  text-transform: lowercase;
+}
+.custom-color-hex input:focus {
+  outline: none;
+}
+.custom-color-hex:has(input[aria-invalid='true']) {
+  border-color: var(--color-danger);
+}
+.custom-color-error {
+  width: 100%;
+  font-size: 13px;
+  color: var(--color-danger);
 }

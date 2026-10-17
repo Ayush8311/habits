@@ -107,7 +107,7 @@ export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit
         {habits.map((habit) => (
           <Row
             key={habit.id}
-            leading={<HabitIcon icon={habit.icon} color={habit.color} />}
+            leading={<HabitIcon icon={habit.icon} emoji={habit.emoji} color={habit.color} />}
             label={habit.name}
             chevron
             onClick={() => onEditHabit(habit.id)}

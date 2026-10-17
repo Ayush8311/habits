@@ -1,5 +1,5 @@
-import { useId, useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Suspense, lazy, useId, useState } from 'react';
+import { Pipette, Smile, Trash2 } from 'lucide-react';
 import { cx } from '../lib/classNames.js';
 import {
   DEFAULT_COLOR,
@@ -8,12 +8,18 @@ import {
   HABIT_ICONS,
   MAX_NAME_LENGTH,
   getHabitColor,
+  habitColorStyle,
+  isCustomColor,
+  normalizeHex,
 } from '../lib/habitOptions.js';
 import { toPercent } from '../lib/stats.js';
 import { HabitIcon } from './calendar/HabitIcon.jsx';
 import { Button } from './ui/Button.jsx';
 import { Modal } from './ui/Modal.jsx';
 import './HabitFormModal.css';
+
+// The emoji data is large, so it loads only when the picker is first opened.
+const EmojiPickerSheet = lazy(() => import('./EmojiPickerSheet.jsx'));
 
 function validateName(name, existingNames) {
   const trimmed = name.trim();
@@ -45,6 +51,106 @@ function HabitStats({ stats, monthName }) {
   );
 }
 
+/** Mirrors a Today-screen row so changes can be judged before saving. */
+function HabitPreview({ name, icon, emoji, color }) {
+  const trimmed = name.trim();
+  return (
+    <div className="habit-preview" style={habitColorStyle(color)} aria-hidden="true">
+      <HabitIcon icon={icon} emoji={emoji} color={color} size="lg" />
+      <span className="habit-preview-text">
+        <span className={cx('habit-preview-name', !trimmed && 'is-placeholder')}>{trimmed || 'Habit name'}</span>
+        <span className="habit-preview-meta">Preview</span>
+      </span>
+      <span className="check check-row-box habit-preview-check is-done">
+        <svg className="check-mark" viewBox="0 0 16 16">
+          <path d="M4 8.4 6.8 11.2 12 5" pathLength="1" />
+        </svg>
+      </span>
+    </div>
+  );
+}
+
+function CustomColorField({ color, onChange }) {
+  const hexId = useId();
+  const isCustom = isCustomColor(color);
+  const [open, setOpen] = useState(isCustom);
+  const [draft, setDraft] = useState(getHabitColor(color));
+  const [invalid, setInvalid] = useState(false);
+  const current = getHabitColor(color);
+
+  const applyDraft = (value) => {
+    setDraft(value);
+    const hex = normalizeHex(value);
+    setInvalid(!hex && value.trim() !== '');
+    if (hex) onChange(hex);
+  };
+
+  return (
+    <>
+      <button
+        type="button"
+        className={cx('custom-color-toggle', isCustom && 'is-selected')}
+        style={isCustom ? { '--swatch': current } : undefined}
+        aria-expanded={open}
+        aria-label={isCustom ? `Custom color ${current}. Edit custom color` : 'Custom color'}
+        title="Custom color"
+        onClick={() => {
+          setOpen((value) => !value);
+          setDraft(current);
+          setInvalid(false);
+        }}
+      >
+        <span className="custom-color-wheel" aria-hidden="true" />
+      </button>
+
+      {open && (
+        <div className="custom-color-panel">
+          <label className="custom-color-native" title="Open color picker">
+            <input
+              type="color"
+              value={current}
+              onInput={(event) => applyDraft(event.target.value)}
+              onChange={(event) => applyDraft(event.target.value)}
+              aria-label="Pick any color"
+            />
+            <span className="custom-color-native-face" style={{ background: current }}>
+              <Pipette size={16} strokeWidth={2} aria-hidden="true" />
+            </span>
+          </label>
+          <div className="custom-color-hex">
+            <label htmlFor={hexId} className="custom-color-hex-label">
+              HEX
+            </label>
+            <input
+              id={hexId}
+              type="text"
+              inputMode="text"
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              maxLength={7}
+              value={draft}
+              placeholder="#368653"
+              aria-invalid={invalid}
+              aria-describedby={invalid ? `${hexId}-error` : undefined}
+              onChange={(event) => applyDraft(event.target.value)}
+              onBlur={() => {
+                setDraft(current);
+                setInvalid(false);
+              }}
+            />
+          </div>
+          {invalid && (
+            <p id={`${hexId}-error`} className="custom-color-error" role="alert">
+              Use 6 hex digits, like #368653.
+            </p>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
 export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmit, onDelete, onClose }) {
   const isEditing = Boolean(habit);
   const formId = useId();
@@ -52,8 +158,10 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
   const errorId = useId();
   const [name, setName] = useState(habit?.name ?? '');
   const [icon, setIcon] = useState(habit?.icon ?? DEFAULT_ICON);
+  const [emoji, setEmoji] = useState(habit?.emoji ?? null);
   const [color, setColor] = useState(habit?.color ?? DEFAULT_COLOR);
   const [error, setError] = useState(null);
+  const [pickingEmoji, setPickingEmoji] = useState(false);
 
   return (
     <Modal
@@ -89,13 +197,15 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
             const problem = validateName(name, existingNames);
             if (problem) {
               setError(problem);
-              event.currentTarget.querySelector('input[type="text"]').focus();
+              event.currentTarget.querySelector(`#${CSS.escape(nameId)}`).focus();
               return;
             }
-            onSubmit({ name, icon, color });
+            onSubmit({ name, icon, emoji, color });
             close();
           }}
         >
+          <HabitPreview name={name} icon={icon} emoji={emoji} color={color} />
+
           {isEditing && stats && <HabitStats stats={stats} monthName={monthName} />}
 
           <div className="field">
@@ -103,7 +213,6 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
               Name
             </label>
             <div className={cx('name-input', error && 'has-error')}>
-              <HabitIcon icon={icon} color={color} size="sm" />
               <input
                 id={nameId}
                 type="text"
@@ -132,15 +241,18 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
 
           <fieldset className="field">
             <legend className="field-label">Icon</legend>
-            <div className="icon-options" style={{ '--habit-color': getHabitColor(color) }}>
+            <div className="icon-options" style={habitColorStyle(color)}>
               {HABIT_ICONS.map(({ id, label, Icon }) => (
                 <label key={id} className="option" title={label}>
                   <input
                     type="radio"
                     name={`${formId}-icon`}
                     value={id}
-                    checked={icon === id}
-                    onChange={() => setIcon(id)}
+                    checked={!emoji && icon === id}
+                    onChange={() => {
+                      setIcon(id);
+                      setEmoji(null);
+                    }}
                     className="sr-only"
                   />
                   <span className="option-face icon-option">
@@ -149,6 +261,22 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
                   </span>
                 </label>
               ))}
+              <button
+                type="button"
+                className={cx('emoji-choose', emoji && 'is-selected')}
+                aria-haspopup="dialog"
+                aria-label={emoji ? `Emoji ${emoji} selected. Choose a different emoji` : 'Choose an emoji'}
+                onClick={() => setPickingEmoji(true)}
+              >
+                {emoji ? (
+                  <span className="emoji-choose-glyph" aria-hidden="true">
+                    {emoji}
+                  </span>
+                ) : (
+                  <Smile size={18} strokeWidth={1.9} aria-hidden="true" />
+                )}
+                <span>{emoji ? 'Change' : 'Choose'}</span>
+              </button>
             </div>
           </fieldset>
 
@@ -170,8 +298,19 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
                   </span>
                 </label>
               ))}
+              <CustomColorField color={color} onChange={setColor} />
             </div>
           </fieldset>
+
+          {pickingEmoji && (
+            <Suspense fallback={null}>
+              <EmojiPickerSheet
+                initialEmoji={emoji}
+                onSelect={(value) => setEmoji(value)}
+                onClose={() => setPickingEmoji(false)}
+              />
+            </Suspense>
+          )}
         </form>
       )}
     </Modal>

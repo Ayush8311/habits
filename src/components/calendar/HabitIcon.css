@@ -5,8 +5,8 @@
   width: 32px;
   height: 32px;
   border-radius: 9px;
-  color: var(--habit-color);
-  background: color-mix(in srgb, var(--habit-color) 13%, white);
+  color: var(--habit-ink);
+  background: var(--habit-soft);
   transition:
     background-color var(--duration) var(--ease-out),
     color var(--duration) var(--ease-out);
@@ -20,4 +20,16 @@
   width: 44px;
   height: 44px;
   border-radius: 12px;
+}
+
+.habit-icon-emoji {
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--font-sans);
+  font-size: 18px;
+  line-height: 1;
+}
+.habit-icon-sm .habit-icon-emoji {
+  font-size: 15px;
+}
+.habit-icon-lg .habit-icon-emoji {
+  font-size: 24px;
 }

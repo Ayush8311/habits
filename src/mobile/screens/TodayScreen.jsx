@@ -3,7 +3,7 @@ import { Plus, Sparkles, SunMedium } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState.jsx';
 import { ProgressRing } from '../../components/ProgressRing.jsx';
 import { AnimatedNumber } from '../../components/ui/AnimatedNumber.jsx';
-import { formatFullDate } from '../../lib/dates.js';
+import { formatFullDateWithYear } from '../../lib/dates.js';
 import { buildTodayInsight } from '../../lib/insights.js';
 import { countCompletedOn, getHabitStreaks, getWeekComparison } from '../../lib/stats.js';
 import { HabitCheckRow } from '../HabitCheckRow.jsx';
@@ -31,7 +31,7 @@ export function TodayScreen({ store, todayKey, onAddHabit, onEditHabit }) {
   return (
     <div className="today">
       <ScreenHeader
-        eyebrow={formatFullDate(todayKey)}
+        eyebrow={formatFullDateWithYear(todayKey)}
         title="Today"
         actions={
           <>

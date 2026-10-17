@@ -2,7 +2,15 @@ import { useEffect, useMemo, useReducer, useState } from 'react';
 import { habitRepository } from '../data/repository.js';
 import { createSampleState } from '../data/sampleData.js';
 import { getTodayKey } from '../lib/dates.js';
-import { DEFAULT_COLOR, DEFAULT_ICON, MAX_NAME_LENGTH } from '../lib/habitOptions.js';
+import {
+  DEFAULT_COLOR,
+  DEFAULT_ICON,
+  MAX_NAME_LENGTH,
+  isEmoji,
+  isHabitIcon,
+  isPresetColor,
+  normalizeHex,
+} from '../lib/habitOptions.js';
 import { createId } from '../lib/ids.js';
 
 const EMPTY_STATE = { habits: [], completions: {} };
@@ -40,11 +48,12 @@ function reducer(state, action) {
   }
 }
 
-function normaliseFields({ name, icon, color }) {
+function normaliseFields({ name, icon, emoji, color }) {
   return {
     name: name.trim().slice(0, MAX_NAME_LENGTH),
-    icon: icon ?? DEFAULT_ICON,
-    color: color ?? DEFAULT_COLOR,
+    icon: isHabitIcon(icon) ? icon : DEFAULT_ICON,
+    emoji: isEmoji(emoji) ? emoji : null,
+    color: isPresetColor(color) ? color : (normalizeHex(color) ?? DEFAULT_COLOR),
   };
 }
 
