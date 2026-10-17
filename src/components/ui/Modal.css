@@ -63,6 +63,7 @@
 
 .modal-body {
   padding: var(--space-5);
+  overflow-x: hidden; /* enlarged invisible touch targets must never cause sideways scrolling */
   overflow-y: auto;
 }
 

@@ -218,25 +218,33 @@
   transition: background-color var(--duration) var(--ease-out);
 }
 
-/* "Choose" emoji tile: two icon tiles wide, same height */
+/* "Choose emoji" tile: two icon tiles wide, as tall as one, smiley above the label */
 .emoji-choose {
   grid-column: span 2;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 3px;
+  min-width: 0;
   min-height: 0;
-  padding: 0 var(--space-2);
+  padding: 2px 4px;
   border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
   border-radius: var(--radius-md);
   background: var(--color-accent-soft);
   color: var(--color-accent-text);
-  font-size: var(--text-md);
+  font-size: 12.5px;
   font-weight: 600;
+  line-height: 1.15;
   cursor: pointer;
   transition:
     background-color var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out);
+}
+.emoji-choose svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
 }
 .emoji-choose:hover {
   background: color-mix(in srgb, var(--color-accent) 18%, white);
@@ -256,32 +264,44 @@
   color: var(--habit-ink);
   box-shadow: inset 0 0 0 0.5px var(--habit-color);
 }
+.emoji-choose-label {
+  max-width: 100%;
+  white-space: nowrap;
+}
+@media (max-width: 380px) {
+  .emoji-choose {
+    font-size: 12px;
+  }
+}
+@media (max-width: 340px) {
+  .emoji-choose {
+    font-size: 11px;
+    padding: 2px 3px;
+  }
+}
 .emoji-choose-glyph {
   font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', var(--font-sans);
-  font-size: 20px;
+  font-size: 18px;
   line-height: 1;
 }
 
-/* Custom colour */
+/* Custom colour: a multicolour circle that is itself the native colour input */
 .color-options {
   align-items: center;
 }
-.custom-color-toggle {
+.custom-color {
   position: relative;
   display: grid;
   place-items: center;
   width: 28px;
   height: 28px;
-  padding: 0;
-  border: 0;
   border-radius: var(--radius-full);
   background: conic-gradient(from 0deg, #e0675a, #e0b04a, #7cbf6a, #4fa7b8, #6b78d6, #b26bc4, #e0675a);
-  cursor: pointer;
   transition:
     transform var(--duration-fast) var(--ease-out),
     box-shadow var(--duration-fast) var(--ease-out);
 }
-.custom-color-toggle:active {
+.custom-color:active {
   transform: scale(0.94);
 }
 .custom-color-wheel {
@@ -289,107 +309,36 @@
   height: 12px;
   border-radius: var(--radius-full);
   background: var(--color-surface);
+  pointer-events: none;
   transition: background-color var(--duration-fast) var(--ease-out);
 }
-.custom-color-toggle.is-selected {
+.custom-color.is-selected {
   box-shadow:
     0 0 0 2px var(--color-surface),
     0 0 0 4px var(--swatch);
 }
-.custom-color-toggle.is-selected .custom-color-wheel {
+.custom-color.is-selected .custom-color-wheel {
   background: var(--swatch);
   box-shadow: 0 0 0 2px var(--color-surface);
 }
-.custom-color-toggle:focus-visible {
-  outline: none;
+.custom-color:has(.custom-color-input:focus-visible) {
   box-shadow:
     0 0 0 2px var(--color-surface),
     0 0 0 4px var(--color-accent);
 }
 
-.custom-color-panel {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  margin-top: var(--space-1);
-  padding: var(--space-3);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-muted);
-  animation: fade-in var(--duration) var(--ease-out);
-}
-.custom-color-native {
-  position: relative;
-  flex: none;
-  cursor: pointer;
-}
-.custom-color-native input {
+/* Invisible but real and tappable, with a 44px touch target around the 28px circle. */
+.custom-color-input {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -8px;
+  width: calc(100% + 16px);
+  height: calc(100% + 16px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-full);
   opacity: 0;
   cursor: pointer;
-}
-.custom-color-native-face {
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-md);
-  color: rgba(255, 255, 255, 0.92);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-.custom-color-native-face svg {
-  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
-}
-.custom-color-native:has(input:focus-visible) .custom-color-native-face {
-  box-shadow:
-    0 0 0 2px var(--color-surface),
-    0 0 0 4px var(--color-accent);
-}
-
-.custom-color-hex {
-  display: flex;
-  flex: 1;
-  align-items: center;
-  min-width: 140px;
-  height: 44px;
-  border: 1px solid var(--color-border-strong);
-  border-radius: var(--radius-md);
-  background: var(--color-surface);
-}
-.custom-color-hex:focus-within {
-  border-color: var(--color-accent);
-  box-shadow: var(--focus-ring);
-}
-.custom-color-hex-label {
-  padding: 0 var(--space-2) 0 var(--space-3);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-tertiary);
-  letter-spacing: 0.04em;
-}
-.custom-color-hex input {
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  border: 0;
-  background: transparent;
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 16px;
-  text-transform: lowercase;
-}
-.custom-color-hex input:focus {
-  outline: none;
-}
-.custom-color-hex:has(input[aria-invalid='true']) {
-  border-color: var(--color-danger);
-}
-.custom-color-error {
-  width: 100%;
-  font-size: 13px;
-  color: var(--color-danger);
+  -webkit-appearance: none;
+  appearance: none;
 }

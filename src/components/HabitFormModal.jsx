@@ -1,5 +1,5 @@
 import { Suspense, lazy, useId, useState } from 'react';
-import { Pipette, Smile, Trash2 } from 'lucide-react';
+import { Smile, Trash2 } from 'lucide-react';
 import { cx } from '../lib/classNames.js';
 import {
   DEFAULT_COLOR,
@@ -70,84 +70,33 @@ function HabitPreview({ name, icon, emoji, color }) {
   );
 }
 
+/**
+ * The multicolour circle *is* the native colour input (transparent, layered on
+ * top), so one tap opens the system picker directly on iOS, Android and desktop.
+ * Cancelling the picker fires no change, so the previous colour stays.
+ */
 function CustomColorField({ color, onChange }) {
-  const hexId = useId();
   const isCustom = isCustomColor(color);
-  const [open, setOpen] = useState(isCustom);
-  const [draft, setDraft] = useState(getHabitColor(color));
-  const [invalid, setInvalid] = useState(false);
   const current = getHabitColor(color);
 
-  const applyDraft = (value) => {
-    setDraft(value);
-    const hex = normalizeHex(value);
-    setInvalid(!hex && value.trim() !== '');
-    if (hex) onChange(hex);
-  };
-
   return (
-    <>
-      <button
-        type="button"
-        className={cx('custom-color-toggle', isCustom && 'is-selected')}
-        style={isCustom ? { '--swatch': current } : undefined}
-        aria-expanded={open}
-        aria-label={isCustom ? `Custom color ${current}. Edit custom color` : 'Custom color'}
-        title="Custom color"
-        onClick={() => {
-          setOpen((value) => !value);
-          setDraft(current);
-          setInvalid(false);
+    <span
+      className={cx('custom-color', isCustom && 'is-selected')}
+      style={isCustom ? { '--swatch': current } : undefined}
+      title="Custom color"
+    >
+      <span className="custom-color-wheel" aria-hidden="true" />
+      <input
+        type="color"
+        className="custom-color-input"
+        value={current}
+        aria-label={isCustom ? `Choose custom color, currently ${current}` : 'Choose custom color'}
+        onChange={(event) => {
+          const hex = normalizeHex(event.target.value);
+          if (hex) onChange(hex);
         }}
-      >
-        <span className="custom-color-wheel" aria-hidden="true" />
-      </button>
-
-      {open && (
-        <div className="custom-color-panel">
-          <label className="custom-color-native" title="Open color picker">
-            <input
-              type="color"
-              value={current}
-              onInput={(event) => applyDraft(event.target.value)}
-              onChange={(event) => applyDraft(event.target.value)}
-              aria-label="Pick any color"
-            />
-            <span className="custom-color-native-face" style={{ background: current }}>
-              <Pipette size={16} strokeWidth={2} aria-hidden="true" />
-            </span>
-          </label>
-          <div className="custom-color-hex">
-            <label htmlFor={hexId} className="custom-color-hex-label">
-              HEX
-            </label>
-            <input
-              id={hexId}
-              type="text"
-              inputMode="text"
-              autoComplete="off"
-              autoCapitalize="off"
-              spellCheck={false}
-              maxLength={7}
-              value={draft}
-              placeholder="#368653"
-              aria-invalid={invalid}
-              aria-describedby={invalid ? `${hexId}-error` : undefined}
-              onChange={(event) => applyDraft(event.target.value)}
-              onBlur={() => {
-                setDraft(current);
-                setInvalid(false);
-              }}
-            />
-          </div>
-          {invalid && (
-            <p id={`${hexId}-error`} className="custom-color-error" role="alert">
-              Use 6 hex digits, like #368653.
-            </p>
-          )}
-        </div>
-      )}
-    </>
+      />
+    </span>
   );
 }
 
@@ -265,7 +214,7 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
                 type="button"
                 className={cx('emoji-choose', emoji && 'is-selected')}
                 aria-haspopup="dialog"
-                aria-label={emoji ? `Emoji ${emoji} selected. Choose a different emoji` : 'Choose an emoji'}
+                aria-label={emoji ? `Emoji ${emoji} selected. Choose a different emoji` : 'Choose emoji'}
                 onClick={() => setPickingEmoji(true)}
               >
                 {emoji ? (
@@ -275,7 +224,7 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
                 ) : (
                   <Smile size={18} strokeWidth={1.9} aria-hidden="true" />
                 )}
-                <span>{emoji ? 'Change' : 'Choose'}</span>
+                <span className="emoji-choose-label">{emoji ? 'Change emoji' : 'Choose emoji'}</span>
               </button>
             </div>
           </fieldset>
