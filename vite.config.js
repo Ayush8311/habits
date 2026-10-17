@@ -32,7 +32,7 @@ export default defineConfig({
         id: base,
         name: 'Habit',
         short_name: 'Habit',
-        description: 'A calm, personal habit tracker.',
+        description: 'A calm, personal habit tracker: check in daily, keep streaks and see your progress.',
         lang: 'en',
         start_url: './',
         scope: './',
@@ -41,6 +41,7 @@ export default defineConfig({
         background_color: BACKGROUND,
         theme_color: ACCENT,
         categories: ['productivity', 'lifestyle', 'health'],
+        prefer_related_applications: false,
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

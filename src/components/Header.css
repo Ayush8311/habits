@@ -17,16 +17,6 @@
   width: 32px;
   height: 32px;
 }
-.brand-mark rect {
-  fill: var(--color-accent);
-}
-.brand-mark path {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 2.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 .brand-text {
   display: flex;
   flex-direction: column;

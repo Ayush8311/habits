@@ -4,13 +4,9 @@ import { Button, IconButton } from './ui/Button.jsx';
 import { SettingsMenu } from './SettingsMenu.jsx';
 import './Header.css';
 
+// The app icon itself (generated from assets/habit-icon.svg), so the header matches the installed app.
 function BrandMark() {
-  return (
-    <svg className="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-      <rect width="32" height="32" rx="9" />
-      <path d="M10 16.6l4 4 8-9" />
-    </svg>
-  );
+  return <img className="brand-mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="32" height="32" />;
 }
 
 export function Header({ todayKey, onAddHabit, settingsActions, summary, installFlow }) {

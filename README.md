@@ -15,7 +15,7 @@ npm run dev        # http://localhost:5173 — desktop and mobile layouts, no se
 npm test           # unit tests for dates, streaks, stats and storage
 npm run build      # production build + service worker in dist/
 npm run preview    # serve dist/ at http://localhost:4173 — use this to test offline and installing
-npm run icons      # regenerate the app icons from scripts/generate-icons.mjs
+npm run icons      # regenerate every icon in public/ from assets/habit-icon.svg
 ```
 
 To try the mobile layout on a computer, narrow the browser window or use the device toolbar
@@ -117,7 +117,9 @@ src/
   data/sampleData.js         example habits
   lib/                       pure logic: dates, stats, insights, storage validation, backup
   pwa.js                     service worker registration, install prompt
-scripts/generate-icons.mjs   renders public/*.png icons
+assets/habit-icon.svg        master app icon (edit this, then `npm run icons`)
+scripts/generate-icons.mjs   renders public/ icons from the master: 192/512, maskable 512,
+                             Apple touch 180, favicon 32 and SVG
 ```
 
 ### Data model

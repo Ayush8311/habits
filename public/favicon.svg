@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#4A9466"/>
+  <rect width="512" height="512" rx="112" fill="#F4F1E8"/>
   <g transform="translate(-30.720000000000027 -30.720000000000027) scale(1.12)">
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#fff" stroke-opacity="0.28" stroke-width="34"/>
-  <circle cx="256" cy="256" r="150" fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round"
-    stroke-dasharray="706.86 942.48" transform="rotate(-90 256 256)"/>
-  <path d="M196 262 L240 306 L320 214" fill="none" stroke="#fff" stroke-width="36"
-    stroke-linecap="round" stroke-linejoin="round"/></g>
+  <g id="artwork" fill="none" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="256" cy="256" r="150" stroke="#DCE6D8"/>
+    <path d="M184 260 L238 312 L328 192 Q371.4 134.2 397 204.7 A150 150 0 1 1 230 108.3" stroke="#2F6E4B"/>
+  </g>
+  </g>
 </svg>
