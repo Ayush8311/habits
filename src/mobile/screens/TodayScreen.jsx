@@ -3,6 +3,7 @@ import { Plus, Sparkles, SunMedium } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState.jsx';
 import { ProgressRing } from '../../components/ProgressRing.jsx';
 import { AnimatedNumber } from '../../components/ui/AnimatedNumber.jsx';
+import { Button, IconButton } from '../../components/ui/Button.jsx';
 import { formatFullDateWithYear } from '../../lib/dates.js';
 import { buildTodayInsight } from '../../lib/insights.js';
 import { countCompletedOn, getHabitStreaks, getWeekComparison } from '../../lib/stats.js';
@@ -36,13 +37,11 @@ export function TodayScreen({ store, todayKey, onAddHabit, onEditHabit }) {
         actions={
           <>
             {habits.length > 0 && (
-              <button type="button" className="text-button" onClick={() => setEditing((value) => !value)}>
+              <Button variant="tertiary" onClick={() => setEditing((value) => !value)}>
                 {isEditing ? 'Done' : 'Edit'}
-              </button>
+              </Button>
             )}
-            <button type="button" className="round-button" aria-label="Add habit" onClick={onAddHabit}>
-              <Plus size={22} strokeWidth={2.2} aria-hidden="true" />
-            </button>
+            <IconButton icon={Plus} label="Add habit" variant="primary" size="lg" onClick={onAddHabit} />
           </>
         }
       />
@@ -73,10 +72,9 @@ export function TodayScreen({ store, todayKey, onAddHabit, onEditHabit }) {
               title="Nothing to track yet"
               message="Add one small habit you’d like to do most days."
               action={
-                <button type="button" className="btn btn-primary btn-md" onClick={onAddHabit}>
-                  <Plus size={16} strokeWidth={2} aria-hidden="true" />
-                  <span>Add a habit</span>
-                </button>
+                <Button variant="primary" icon={Plus} onClick={onAddHabit}>
+                  Add a habit
+                </Button>
               }
             />
           </div>

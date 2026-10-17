@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { WeekList } from '../../components/calendar/WeekList.jsx';
 import { EmptyState } from '../../components/EmptyState.jsx';
+import { Button, IconButton } from '../../components/ui/Button.jsx';
 import { SegmentedControl } from '../../components/ui/SegmentedControl.jsx';
 import {
   addDays,
@@ -112,28 +113,32 @@ export function CalendarScreen({
         eyebrow="Calendar"
         title={formatMonthYear(cursorKey)}
         actions={
-          <button
-            type="button"
-            className="text-button"
-            onClick={() => onCursorChange(todayKey)}
-            disabled={showingToday}
-            hidden={showingToday}
-          >
-            Today
-          </button>
+          !showingToday && (
+            <Button variant="tertiary" onClick={() => onCursorChange(todayKey)}>
+              Today
+            </Button>
+          )
         }
       />
 
       <div className="calendar-controls">
         <SegmentedControl options={VIEW_OPTIONS} value={view} onChange={onViewChange} label="Calendar view" />
         <div className="calendar-stepper" role="group" aria-label={isWeek ? 'Change week' : 'Change month'}>
-          <button type="button" className="stepper-button" aria-label={isWeek ? 'Previous week' : 'Previous month'} onClick={() => step(-1)}>
-            <ChevronLeft size={20} strokeWidth={2} aria-hidden="true" />
-          </button>
+          <IconButton
+            icon={ChevronLeft}
+            label={isWeek ? 'Previous week' : 'Previous month'}
+            variant="surface"
+            size="lg"
+            onClick={() => step(-1)}
+          />
           {isWeek && <span className="calendar-stepper-label tabular">{formatWeekRange(weekDays[0].key)}</span>}
-          <button type="button" className="stepper-button" aria-label={isWeek ? 'Next week' : 'Next month'} onClick={() => step(1)}>
-            <ChevronRight size={20} strokeWidth={2} aria-hidden="true" />
-          </button>
+          <IconButton
+            icon={ChevronRight}
+            label={isWeek ? 'Next week' : 'Next month'}
+            variant="surface"
+            size="lg"
+            onClick={() => step(1)}
+          />
         </div>
       </div>
 
@@ -144,10 +149,9 @@ export function CalendarScreen({
             title="No habits yet"
             message="Add a habit and your history will build up here."
             action={
-              <button type="button" className="btn btn-primary btn-md" onClick={onAddHabit}>
-                <Plus size={16} strokeWidth={2} aria-hidden="true" />
-                <span>Add a habit</span>
-              </button>
+              <Button variant="primary" icon={Plus} onClick={onAddHabit}>
+                Add a habit
+              </Button>
             }
           />
         </div>

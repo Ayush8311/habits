@@ -1,40 +1,69 @@
-.btn {
+/*
+ * The app's button system. Every text button is a pill and every icon-only
+ * button is a circle; roles differ by colour, not shape.
+ *
+ *   .btn               pill with a text label (optionally an icon)
+ *     .btn-primary     filled green: Add habit, Save, Confirm
+ *     .btn-secondary   neutral fill: Today
+ *     .btn-ghost       transparent, muted text: Cancel
+ *     .btn-tertiary    transparent, green text: Edit, Done
+ *     .btn-danger      filled red: destructive confirmation
+ *     .btn-danger-ghost transparent red text: Delete
+ *   .icon-btn          circle with an icon only
+ *     .icon-btn-ghost  transparent: Close, Settings, arrows
+ *     .icon-btn-primary filled green: the round Add button
+ *     .icon-btn-surface white with a soft shadow: Calendar arrows
+ */
+
+.btn,
+.icon-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  height: 36px;
-  padding: 0 var(--space-4);
+  flex: none;
   border: 0;
-  border-radius: var(--radius-md);
-  font-size: var(--text-md);
-  font-weight: 500;
-  white-space: nowrap;
+  border-radius: var(--radius-full);
   cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   transition:
     background-color var(--duration-fast) var(--ease-out),
     color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
     transform var(--duration-fast) var(--ease-out),
     opacity var(--duration-fast) var(--ease-out);
 }
-.btn:active:not(:disabled) {
-  transform: scale(0.97);
+.btn:active:not(:disabled),
+.icon-btn:active:not(:disabled) {
+  transform: scale(0.96);
 }
-.btn:disabled {
+.btn:disabled,
+.icon-btn:disabled {
   opacity: 0.4;
   cursor: default;
 }
-.btn:focus-visible {
+.btn:focus-visible,
+.icon-btn:focus-visible {
   outline: none;
   box-shadow: var(--focus-ring);
 }
 
+/* ── Pill buttons ── */
+.btn {
+  --btn-height: 36px;
+  gap: var(--space-2);
+  height: var(--btn-height);
+  padding: 0 18px;
+  font-size: var(--text-md);
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+}
 .btn-sm {
-  height: 30px;
-  padding: 0 var(--space-3);
-  border-radius: var(--radius-sm);
-  font-size: var(--text-sm);
+  --btn-height: 30px;
   gap: 6px;
+  padding: 0 14px;
+  font-size: var(--text-sm);
 }
 
 .btn-primary {
@@ -60,9 +89,22 @@
   background: transparent;
   color: var(--color-text-secondary);
 }
-.btn-ghost:hover:not(:disabled) {
+.btn-ghost:hover:not(:disabled),
+.btn-ghost:active:not(:disabled) {
   background: var(--color-fill);
   color: var(--color-text);
+}
+
+.btn-tertiary {
+  padding: 0 14px;
+  background: transparent;
+  color: var(--color-accent-text);
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.btn-tertiary:hover:not(:disabled),
+.btn-tertiary:active:not(:disabled) {
+  background: var(--color-accent-soft);
 }
 
 .btn-danger {
@@ -80,54 +122,69 @@
   background: transparent;
   color: var(--color-danger);
 }
-.btn-danger-ghost:hover:not(:disabled) {
+.btn-danger-ghost:hover:not(:disabled),
+.btn-danger-ghost:active:not(:disabled) {
   background: var(--color-danger-soft);
 }
 
+/* ── Circular icon buttons ── */
 .icon-btn {
-  display: inline-grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
+  --icon-btn-size: 36px;
+  width: var(--icon-btn-size);
+  height: var(--icon-btn-size);
   padding: 0;
-  border: 0;
-  border-radius: var(--radius-md);
+}
+.icon-btn-sm {
+  --icon-btn-size: 30px;
+}
+.icon-btn-lg {
+  --icon-btn-size: 40px;
+}
+
+.icon-btn-ghost {
   background: transparent;
   color: var(--color-text-secondary);
-  cursor: pointer;
-  transition:
-    background-color var(--duration-fast) var(--ease-out),
-    color var(--duration-fast) var(--ease-out),
-    transform var(--duration-fast) var(--ease-out);
 }
-.icon-btn:hover:not(:disabled),
-.icon-btn[aria-expanded='true'] {
+.icon-btn-ghost:hover:not(:disabled),
+.icon-btn-ghost[aria-expanded='true'] {
   background: var(--color-fill);
   color: var(--color-text);
 }
-.icon-btn:active:not(:disabled) {
-  transform: scale(0.94);
+
+.icon-btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+  box-shadow: 0 2px 8px -2px rgba(74, 148, 102, 0.5);
 }
-.icon-btn:disabled {
-  opacity: 0.35;
-  cursor: default;
+.icon-btn-primary:hover:not(:disabled) {
+  background: var(--color-accent-hover);
 }
-.icon-btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-.icon-btn-sm {
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
+.icon-btn-primary:active:not(:disabled) {
+  background: var(--color-accent-pressed);
 }
 
+.icon-btn-surface {
+  background: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+}
+.icon-btn-surface:hover:not(:disabled),
+.icon-btn-surface:active:not(:disabled) {
+  background: var(--color-fill);
+}
+
+/* Comfortable touch targets on phones and tablets. */
 @media (pointer: coarse) {
+  .btn {
+    --btn-height: 44px;
+  }
   .btn-sm {
-    height: 36px;
+    --btn-height: 40px;
+  }
+  .icon-btn {
+    --icon-btn-size: 44px;
   }
   .icon-btn-sm {
-    width: 36px;
-    height: 36px;
+    --icon-btn-size: 40px;
   }
 }

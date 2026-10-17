@@ -58,7 +58,7 @@
   color: var(--color-text-secondary);
 }
 .modal-close {
-  margin: -4px -8px 0 0;
+  margin: -4px -6px 0 0;
 }
 
 .modal-body {
