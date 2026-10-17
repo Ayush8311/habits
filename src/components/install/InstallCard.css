@@ -1,0 +1,52 @@
+.install-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-4);
+}
+.install-card-icon {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(29, 29, 31, 0.12);
+}
+.install-card-text {
+  flex: 1;
+  min-width: 140px;
+}
+.install-card-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.install-card-description {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+.install-card-message {
+  margin-top: var(--space-1);
+  font-size: 13px;
+  color: var(--color-accent-text);
+}
+.install-card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Full-width action on narrow phones. */
+@media (max-width: 420px) {
+  .install-card .btn {
+    width: 100%;
+  }
+}

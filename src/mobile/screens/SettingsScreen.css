@@ -92,3 +92,7 @@
   text-align: center;
   color: var(--color-text-tertiary);
 }
+
+.settings-group-spaced {
+  margin-top: var(--space-3);
+}

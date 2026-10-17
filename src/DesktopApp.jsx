@@ -6,6 +6,7 @@ import { InsightsSection } from './components/insights/InsightsSection.jsx';
 import { MonthlyOverview } from './components/MonthlyOverview.jsx';
 import { useBackupActions } from './components/useBackupActions.jsx';
 import { useHabitDialogs } from './components/useHabitDialogs.jsx';
+import { useInstallFlow } from './components/install/useInstallFlow.jsx';
 import { COMPACT_QUERY, useMediaQuery } from './hooks/useMediaQuery.js';
 import { addDays, getMonthDays, getMonthOf, isSameMonth, shiftMonth } from './lib/dates.js';
 import { countCompletedOn, eligibleKeys, getOverallProgress } from './lib/stats.js';
@@ -46,6 +47,7 @@ export function DesktopApp({ store, todayKey }) {
 
   const { openHabitForm, confirm, dialogs } = useHabitDialogs({ store, todayKey, monthKeys, monthKey: cursorKey });
   const backup = useBackupActions({ store, confirm });
+  const installFlow = useInstallFlow();
 
   return (
     <div className="app">
@@ -53,6 +55,7 @@ export function DesktopApp({ store, todayKey }) {
         todayKey={todayKey}
         onAddHabit={() => openHabitForm()}
         summary={`${plural(habits.length, 'habit')}, ${plural(totalCheckIns, 'check-in')}`}
+        installFlow={installFlow}
         settingsActions={{
           export: backup.exportData,
           import: backup.chooseFile,
@@ -114,6 +117,7 @@ export function DesktopApp({ store, todayKey }) {
       </main>
 
       {dialogs}
+      {installFlow.dialog}
     </div>
   );
 }

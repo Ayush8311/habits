@@ -6,18 +6,24 @@ import {
   HardDrive,
   Plus,
   RotateCcw,
-  Share,
-  Smartphone,
-  SquarePlus,
   Trash2,
   Upload,
 } from 'lucide-react';
 import { HabitIcon } from '../../components/calendar/HabitIcon.jsx';
 import { countCheckIns } from '../../lib/backup.js';
 import { cx } from '../../lib/classNames.js';
-import { isIOS, isStandalone, usePWAStatus } from '../../pwa.js';
+import { InstallCard } from '../../components/install/InstallCard.jsx';
+import { useInstallFlow } from '../../components/install/useInstallFlow.jsx';
+import { usePWAState } from '../../pwa.js';
 import { ScreenHeader } from '../ScreenHeader.jsx';
 import './SettingsScreen.css';
+
+const BUILD_LABEL = new Date(__BUILD_TIME__).toLocaleString('en-US', {
+  month: 'short',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+});
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
@@ -60,38 +66,24 @@ function Group({ title, footer, children }) {
 }
 
 function InstallGroup() {
-  const { canInstall, install, offlineReady } = usePWAStatus();
-  const installed = isStandalone();
+  const flow = useInstallFlow();
+  const { offlineReady } = usePWAState();
 
   return (
-    <Group
-      title="App"
-      footer={
-        installed
-          ? null
-          : isIOS()
-            ? 'In Safari, tap Share, then “Add to Home Screen”. Habit then opens full screen like any other app.'
-            : 'Install Habit to open it from your home screen, full screen, even without a connection.'
-      }
-    >
-      {installed ? (
-        <Row icon={Smartphone} label="Installed" detail="Running as a Home Screen app" tone="accent" />
-      ) : canInstall ? (
-        <Row icon={SquarePlus} label="Install Habit" detail="Add to your home screen" tone="accent" onClick={install} />
-      ) : (
+    <section className="m-section">
+      <h2 className="m-section-title">App</h2>
+      <div className="m-card">
+        <InstallCard flow={flow} />
+      </div>
+      <ul className="m-card settings-group settings-group-spaced">
         <Row
-          icon={isIOS() ? Share : SquarePlus}
-          label="Add to Home Screen"
-          detail={isIOS() ? 'Share → Add to Home Screen' : 'Use your browser’s Install or Add to Home screen option'}
-          tone="accent"
+          icon={CircleCheck}
+          label={offlineReady ? 'Works offline' : 'Preparing offline mode'}
+          detail={offlineReady ? 'Habit is saved on this device' : 'Available after the first full load'}
         />
-      )}
-      <Row
-        icon={CircleCheck}
-        label={offlineReady ? 'Works offline' : 'Preparing offline mode'}
-        detail={offlineReady ? 'The app is saved on this device' : 'Available after the first full load'}
-      />
-    </Group>
+      </ul>
+      {flow.dialog}
+    </section>
   );
 }
 
@@ -102,6 +94,8 @@ export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit
   return (
     <div className="settings-screen">
       <ScreenHeader title="Settings" />
+
+      <InstallGroup />
 
       <Group title="Habits">
         {habits.map((habit) => (
@@ -116,7 +110,6 @@ export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit
         <Row icon={Plus} label="Add habit" tone="accent" onClick={onAddHabit} />
       </Group>
 
-      <InstallGroup />
 
       <Group
         title="Data"
@@ -175,7 +168,9 @@ export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit
         />
       </Group>
 
-      <p className="settings-version">Habit · version 1.1</p>
+      <p className="settings-version">
+        Habit · version {__APP_VERSION__} · built {BUILD_LABEL}
+      </p>
     </div>
   );
 }

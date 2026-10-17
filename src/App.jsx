@@ -1,3 +1,4 @@
+import { UpdateToast } from './components/install/UpdateToast.jsx';
 import { DesktopApp } from './DesktopApp.jsx';
 import { useHabitStore } from './hooks/useHabitStore.js';
 import { MOBILE_QUERY, useMediaQuery } from './hooks/useMediaQuery.js';
@@ -13,5 +14,10 @@ export default function App() {
   const store = useHabitStore();
   const isMobile = useMediaQuery(MOBILE_QUERY);
 
-  return isMobile ? <MobileApp store={store} todayKey={todayKey} /> : <DesktopApp store={store} todayKey={todayKey} />;
+  return (
+    <>
+      {isMobile ? <MobileApp store={store} todayKey={todayKey} /> : <DesktopApp store={store} todayKey={todayKey} />}
+      <UpdateToast />
+    </>
+  );
 }

@@ -14,7 +14,7 @@ npm install
 npm run dev        # http://localhost:5173 — desktop and mobile layouts, no service worker
 npm test           # unit tests for dates, streaks, stats and storage
 npm run build      # production build + service worker in dist/
-npm run preview    # serve dist/ at http://localhost:4173 — use this to test offline/install
+npm run preview    # serve dist/ at http://localhost:4173 — use this to test offline and installing
 npm run icons      # regenerate the app icons from scripts/generate-icons.mjs
 ```
 
@@ -23,42 +23,58 @@ in Chrome DevTools.
 
 ## Deploy over HTTPS
 
-Service workers and installation require HTTPS (localhost is the only exception). `dist/` is a
-plain static site, so any static host works. Pick one:
+Installing and offline mode need HTTPS (localhost is the only exception). `dist/` is a static
+site, so any static host works.
 
-- **Netlify:** `npx netlify-cli deploy --prod --dir=dist` (or drag `dist/` onto
-  app.netlify.com/drop). `public/_headers` sets the cache headers.
-- **Vercel:** `npx vercel --prod` from this folder. `vercel.json` sets the cache headers.
-  Build command `npm run build`, output directory `dist`.
-- **Cloudflare Pages:** connect the repository, build command `npm run build`, output `dist`.
-  `public/_headers` sets the cache headers.
+### GitHub Pages
 
-The app assumes it is served from the domain root (`/`). To host it in a sub-folder (for
-example GitHub Pages at `/habits/`), set `base` in `vite.config.js` and the manifest's
-`start_url`, `scope` and `id` to that path.
+`.github/workflows/deploy-pages.yml` builds, tests and publishes the app. One-time setup:
 
-Testing on your phone before deploying: the phone must reach the app over HTTPS, so a plain
-`http://192.168.x.x` address will open the app but can't install it or run it offline. Use a
-deployment, or a tunnel such as `npx cloudflared tunnel --url http://localhost:4173` while
-`npm run preview` is running.
+1. GitHub Pages must be available for the repository: make it public, or use a paid plan for a
+   private repository.
+2. Repository **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+3. Deploy: **Actions → Deploy to GitHub Pages → Run workflow**. To deploy automatically on every
+   push to `main`, add the repository variable `DEPLOY_TO_PAGES` = `true`
+   (Settings → Secrets and variables → Actions → Variables).
 
-## Install on a phone
+The app is then at `https://<user>.github.io/<repository>/` (for this repository:
+`https://ayush8311.github.io/habits/`), or at your custom domain if you set one in the Pages
+settings. The workflow reads the correct base path from GitHub, so no code changes are needed
+for either.
 
-**iPhone (Safari):** open the HTTPS address in Safari → tap **Share** → **Add to Home Screen**
-→ **Add**. Habit opens full screen from its icon. (Other iOS browsers can also add it from
-their Share menu on iOS 16.4 and later.)
+### Netlify, Vercel, Cloudflare Pages
 
-**Android (Chrome):** open the address → tap **Install app** when offered, or **⋮ → Add to
-Home screen → Install**. Settings → *Install Habit* also triggers the prompt when Chrome
-allows it.
+Build command `npm run build`, output directory `dist`. `public/_headers` (Netlify,
+Cloudflare) and `vercel.json` set cache headers so updates reach installed apps promptly.
+
+### Building for a sub-folder yourself
+
+```bash
+BASE_PATH=/habits/ npm run build   # assets, manifest and service worker all use /habits/
+```
+
+## Install the app
+
+Open the deployed HTTPS address, then:
+
+| Device | How |
+|---|---|
+| **iPhone / iPad** | Safari → **Share** → **Add to Home Screen** → **Add**. (iOS 16.4+: also from the Share menu in Chrome, Edge and Firefox.) Settings → *Install App* shows these steps. |
+| **Android** | Chrome, Edge or Samsung Internet: Settings → **Install App** opens the install prompt, or use the browser menu → *Install app* / *Add to Home screen*. |
+| **Windows** | Chrome or Edge: the **Install** button in the header or Settings, or the install icon in the address bar. |
+| **macOS** | Chrome or Edge: as on Windows. Safari 17+ (macOS Sonoma or later): **File → Add to Dock**. |
+| **Firefox (desktop)** | No full app installation on most systems; use Chrome, Edge or Safari to install. Habit still works offline in Firefox. |
+
+Installed, Habit opens in its own window or full screen at the Today tab. The install button is
+replaced by "Installed" there.
 
 ## Offline and updates
 
-- The whole app (HTML, JavaScript, CSS, icons) is precached by the service worker on first
-  load, so it opens and works with no connection. Check-ins made offline are saved
-  immediately on the device. A small banner says when you are offline.
-- When you deploy a new version, the installed app checks for it on launch, when it returns
-  to the foreground and hourly, then activates it automatically on the next load.
+- The service worker precaches only the app's own build files (HTML, JS, CSS, icons). After the
+  first load the app opens with no connection, and check-ins save to the device immediately.
+- When a new version is deployed, the app downloads it in the background (checked on launch,
+  when it returns to the foreground and hourly) and shows **"A new version is ready."** with a
+  **Reload** button. Nothing reloads without you choosing to.
 
 ## Your data
 
