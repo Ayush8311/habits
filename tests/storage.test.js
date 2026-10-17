@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createSampleState } from '../src/data/sampleData.js';
 import { sanitizeState } from '../src/lib/storage.js';
 
 test('sanitizeState drops invalid habits, dates and orphaned records', () => {
@@ -26,14 +25,4 @@ test('sanitizeState drops invalid habits, dates and orphaned records', () => {
 test('sanitizeState rejects non-state input', () => {
   assert.equal(sanitizeState(null), null);
   assert.equal(sanitizeState({ habits: 'nope' }), null);
-});
-
-test('sample data has 7 habits and no future check-ins', () => {
-  const today = '2026-10-17';
-  const state = createSampleState(today);
-  assert.equal(state.habits.length, 7);
-  for (const record of Object.values(state.completions)) {
-    for (const key of Object.keys(record)) assert.ok(key <= today, `${key} is in the future`);
-  }
-  assert.deepEqual(sanitizeState(JSON.parse(JSON.stringify(state))), state);
 });

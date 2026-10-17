@@ -19,8 +19,8 @@ const ITEMS = [
   {
     id: 'reset',
     icon: RotateCcw,
-    title: 'Reset sample data',
-    description: 'Replace everything with the example habits',
+    title: 'Reset to default habits',
+    description: 'Replace everything with the default habits',
   },
   {
     id: 'clear',

@@ -61,10 +61,10 @@ export function DesktopApp({ store, todayKey }) {
           import: backup.chooseFile,
           reset: () =>
           confirm({
-            title: 'Reset to sample data?',
-            message: 'Your habits and check-ins will be replaced with the example set.',
+            title: 'Reset to default habits?',
+            message: 'Your habits and check-ins will be replaced with the default habits, with no check-ins.',
             confirmLabel: 'Reset',
-            onConfirm: store.resetToSample,
+            onConfirm: store.resetToDefaults,
           }),
           clear: () =>
           confirm({

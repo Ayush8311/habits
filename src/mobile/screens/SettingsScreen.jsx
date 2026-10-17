@@ -130,13 +130,13 @@ export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit
       <Group title="Reset">
         <Row
           icon={RotateCcw}
-          label="Reset to sample data"
+          label="Reset to default habits"
           onClick={() =>
             confirm({
-              title: 'Reset to sample data?',
-              message: 'Your habits and check-ins will be replaced with the example set.',
+              title: 'Reset to default habits?',
+              message: 'Your habits and check-ins will be replaced with the default habits, with no check-ins.',
               confirmLabel: 'Reset',
-              onConfirm: store.resetToSample,
+              onConfirm: store.resetToDefaults,
             })
           }
         />

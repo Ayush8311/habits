@@ -276,7 +276,7 @@ src/
     useBackupActions.jsx     export/import
   hooks/                     useHabitStore, useToday, media queries, online status
   data/repository.js         storage interface (LocalStorage today)
-  data/sampleData.js         example habits
+  data/defaultHabits.js      habits a new installation starts with (no check-ins)
   lib/                       pure logic: dates, stats, insights, storage validation, backup
   pwa.js                     service worker registration, install prompt
 assets/habit-icon.svg        master app icon (edit this, then `npm run icons`)

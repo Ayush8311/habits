@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
 import { habitRepository } from '../data/repository.js';
-import { createSampleState } from '../data/sampleData.js';
+import { createDefaultState, loadInitialState } from '../data/defaultHabits.js';
 import { getTodayKey } from '../lib/dates.js';
 import {
   DEFAULT_COLOR,
@@ -63,7 +63,7 @@ function normaliseFields({ name, icon, emoji, color }) {
  * never touches components.
  */
 export function useHabitStore(repository = habitRepository) {
-  const [state, dispatch] = useReducer(reducer, repository, (repo) => repo.load() ?? createSampleState(getTodayKey()));
+  const [state, dispatch] = useReducer(reducer, repository, (repo) => loadInitialState(repo, getTodayKey()));
   const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
@@ -90,8 +90,8 @@ export function useHabitStore(repository = habitRepository) {
       clearCompletions() {
         dispatch({ type: 'clear' });
       },
-      resetToSample() {
-        dispatch({ type: 'replace', state: createSampleState(getTodayKey()) });
+      resetToDefaults() {
+        dispatch({ type: 'replace', state: createDefaultState(getTodayKey()) });
       },
       deleteEverything() {
         dispatch({ type: 'replace', state: EMPTY_STATE });

@@ -33,6 +33,7 @@ export function TodayScreen({ store, todayKey, onAddHabit, onEditHabit }) {
     <div className="today">
       <ScreenHeader
         eyebrow={formatFullDateWithYear(todayKey)}
+        wideEyebrow
         title="Today"
         actions={
           <>
