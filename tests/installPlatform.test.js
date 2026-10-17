@@ -35,6 +35,17 @@ test('install instructions match the platform', () => {
   assert.equal(detectInstallPlatform({}), 'other');
 });
 
+test('browsers inside other apps get "open in your browser" steps', () => {
+  assert.equal(detectInstallPlatform({ userAgent: `${UA.iphoneSafari} Instagram 400.0.0` }), 'in-app');
+  assert.equal(
+    detectInstallPlatform({
+      userAgent:
+        'Mozilla/5.0 (Linux; Android 15; Pixel 9; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0 Mobile Safari/537.36',
+    }),
+    'in-app',
+  );
+});
+
 test('client hints identify Chromium even with a reduced user agent', () => {
   assert.equal(
     detectInstallPlatform({ userAgent: 'Mozilla/5.0 (X11; Linux x86_64)', brands: [{ brand: 'Google Chrome', version: '140' }] }),

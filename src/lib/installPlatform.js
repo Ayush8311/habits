@@ -4,13 +4,18 @@
 
 /**
  * @param {object} env  Defaults to the current browser; injectable for tests.
- * @returns {'ios'|'android'|'android-firefox'|'mac-safari'|'desktop-chromium'|'desktop-firefox'|'other'}
+ * @returns {'ios'|'in-app'|'android'|'android-firefox'|'mac-safari'|'desktop-chromium'|'desktop-firefox'|'other'}
  */
+const IN_APP_BROWSER = /FBAN|FBAV|FB_IAB|Instagram|LinkedInApp|Line\/|Snapchat|TikTok|musical_ly|Twitter|GSA\//;
+
 export function detectInstallPlatform(env = browserEnv()) {
   const { userAgent: ua = '', platform = '', maxTouchPoints = 0, brands = [] } = env;
 
   // iPadOS reports itself as a Mac, but has touch.
   const isIOS = /iPhone|iPad|iPod/.test(ua) || (platform === 'MacIntel' && maxTouchPoints > 1);
+  // Browsers built into other apps (Instagram, Facebook, Gmail links…) can't install
+  // web apps on either platform; the page has to be opened in the real browser.
+  if (IN_APP_BROWSER.test(ua) || (/Android/.test(ua) && /; wv\)/.test(ua))) return 'in-app';
   if (isIOS) return 'ios';
 
   const isFirefox = /Firefox\//.test(ua);

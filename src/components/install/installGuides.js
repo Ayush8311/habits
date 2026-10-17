@@ -7,11 +7,23 @@ export const INSTALL_GUIDES = {
     title: 'Add Habit to your Home Screen',
     intro: 'On iPhone and iPad, Habit is installed from the Share menu.',
     steps: [
-      { icon: Share, text: 'Tap the Share button. In Safari it’s in the toolbar at the bottom (iPhone) or top (iPad).' },
+      { icon: Share, text: 'Tap the Share button. In Safari it’s in the toolbar at the bottom (iPhone) or top (iPad); in Chrome it’s in the address bar.' },
       { icon: SquarePlus, text: 'Scroll down and tap “Add to Home Screen”.' },
       { icon: Plus, text: 'Tap “Add”. Habit appears on your Home Screen and opens full screen.' },
     ],
+    notice:
+      'The Home Screen app keeps its own data, separate from Safari. If you already have habits here, tap Export backup in Settings first, then Import backup in the installed app.',
     note: 'Option names vary slightly by iOS version. On iOS 16.4 and later, Chrome, Edge and Firefox offer “Add to Home Screen” in their Share menus too.',
+  },
+  'in-app': {
+    title: 'Open Habit in your browser',
+    intro: 'This page is open inside another app, which can’t install web apps.',
+    steps: [
+      { icon: EllipsisVertical, text: 'Open this app’s menu (⋯ or ⋮), usually at the top or bottom right.' },
+      { icon: AppWindow, text: 'Choose “Open in Safari” on iPhone, or “Open in Chrome” / “Open in browser” on Android.' },
+      { icon: Download, text: 'Tap Install App in Habit’s Settings again to see the steps for that browser.' },
+    ],
+    note: 'You can also copy the link and paste it into Safari or Chrome.',
   },
   android: {
     title: 'Install Habit on Android',

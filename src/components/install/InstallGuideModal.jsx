@@ -30,6 +30,7 @@ export function InstallGuideModal({ platform, onClose }) {
           </li>
         ))}
       </ol>
+      {guide.notice && <p className="install-notice">{guide.notice}</p>}
       {guide.note && <p className="install-note">{guide.note}</p>}
     </Modal>
   );

@@ -68,6 +68,12 @@ Open the deployed HTTPS address, then:
 Installed, Habit opens in its own window or full screen at the Today tab. The install button is
 replaced by "Installed" there.
 
+- **iPhone data:** a Home Screen app has its own storage, separate from Safari. If you already
+  track habits in Safari, use **Export backup** there and **Import backup** in the installed app.
+  (On Android and desktop, the installed app shares data with the browser.)
+- **In-app browsers** (links opened inside Instagram, Facebook, Gmail and similar) can't install
+  web apps; the Install App button explains how to open the page in Safari or Chrome.
+
 ## Offline and updates
 
 - The service worker precaches only the app's own build files (HTML, JS, CSS, icons). After the

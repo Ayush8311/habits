@@ -25,9 +25,11 @@ export default defineConfig({
       registerType: 'prompt',
       injectRegister: false, // Registered in src/pwa.js so updates can be checked periodically.
       manifest: {
-        // Relative URLs resolve against the manifest's own location, so the same
-        // build works at '/' and under a GitHub Pages sub-folder.
-        id: './',
+        // start_url and scope resolve against the manifest's own location, so the same
+        // build works at '/' and under a GitHub Pages sub-folder. `id` resolves against
+        // the origin instead, so it names the base path explicitly; otherwise every app
+        // on <user>.github.io would share one identity.
+        id: base,
         name: 'Habit',
         short_name: 'Habit',
         description: 'A calm, personal habit tracker.',
