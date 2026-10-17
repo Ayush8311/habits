@@ -113,14 +113,7 @@ jobs:
       - name: Find and check the live app
         if: steps.existing.outputs.exists != 'true'
         run: |
-          url="${APP_URL:-$(gh api "repos/$GH_REPO/pages" --jq .html_url 2>/dev/null || true)}"
-          if [ -z "$url" ]; then
-            echo "::error::No deployed app found. Enable GitHub Pages and run 'Deploy to GitHub Pages', or set the APP_URL repository variable."; exit 1
-          fi
-          url="${url%/}/"
-          if ! curl -fsSL "${url}manifest.webmanifest" | grep -q '"name":"Habit"'; then
-            echo "::error::$url does not serve Habit's manifest yet. Deploy the site, then re-run this workflow."; exit 1
-          fi
+          url="$(bash scripts/check-live-app.sh)"
           echo "Live app: $url"
           echo "LIVE_URL=$url" >> "$GITHUB_ENV"
 
