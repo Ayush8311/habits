@@ -169,10 +169,15 @@ backup) to install a newer version.
    On macOS, `base64 -i ~/habit-release.jks | pbcopy` copies the value straight to the
    clipboard.
 
-3. Recommended: add the **repository variable** `ANDROID_SIGNING_CERT_SHA256` (Variables
-   tab) with the fingerprint printed by
+3. Add the **repository variable** `ANDROID_SIGNING_CERT_SHA256` (Variables tab) with the
+   fingerprint printed by
    `keytool -list -v -keystore ~/habit-release.jks -alias habit | grep SHA256:`.
-   The workflow then refuses to publish an APK signed with any other key.
+   Release builds require it, and fail if the APK is signed with any other key.
+
+Because the alias `habit` is a secret, GitHub Actions masks the word "habit" in every log,
+so file names show as `***-v1.0.1.apk` there. Only the logs are affected: artifacts and
+release files keep their real names, and the workflow never passes file names between
+jobs through outputs, which GitHub drops when they contain a secret.
 
 To build a signed APK locally, create `android/keystore.properties` (git-ignored):
 
@@ -192,13 +197,29 @@ release build stops with an error instead of producing an unsigned APK.
 `.github/workflows/android-apk.yml` builds the APK:
 
 - **On a version tag** (`git push origin v1.0.1`): tests, builds and verifies the web app,
-  syncs Capacitor, builds a signed release APK, checks it with `apksigner` and `aapt2`
-  (package name, version, signature, and the certificate if `ANDROID_SIGNING_CERT_SHA256`
-  is set), and attaches `habit-v1.0.1.apk` plus its `.sha256` to the release that
-  `release.yml` publishes for that tag. It never creates a second release and never
-  replaces an APK that is already attached. Missing secrets fail the run with a message.
+  syncs Capacitor, builds a signed release APK and checks it with
+  `scripts/android-apk.sh` (signature, release certificate, package name, version, not
+  debuggable). It uploads the APK and its `.sha256` as the workflow artifact
+  `habit-android-release`; the `verify-artifact` job downloads and checks it again; then
+  the `attach` job adds `habit-v1.0.1.apk` and `habit-v1.0.1.apk.sha256` to the release
+  that `release.yml` publishes for that tag. It never creates a second release and never
+  replaces an attached file. Missing secrets, a missing certificate variable, a wrong
+  signature or a release that doesn't appear within 20 minutes fail the run with a message.
 - **Manually** (Actions → Android APK → Run workflow): `debug` builds a test APK, `release`
-  a signed one; both are downloadable from the run's **Artifacts** section only.
+  a signed one. `build` and `verify-artifact` run as above; `attach` is skipped, so
+  nothing is published. Download the APK from the run's **Artifacts** section
+  (`habit-android-release` or `habit-android-debug`), named `habit-v1.0.1-<commit>.apk`.
+
+To check a downloaded APK yourself (needs Node, Java and Android build-tools), unzip the
+artifact into an empty folder and run, from the repository at the commit it was built from:
+
+```sh
+EXPECTED_CERT=<ANDROID_SIGNING_CERT_SHA256> \
+  ANDROID_HOME=~/Library/Android/sdk \
+  scripts/android-apk.sh verify release ~/Downloads/habit-android-release
+```
+
+Add `TAG=v1.0.1` for an APK from a release.
 
 ### Installing the APK on Android
 
@@ -261,6 +282,7 @@ src/
 assets/habit-icon.svg        master app icon (edit this, then `npm run icons`)
 scripts/generate-icons.mjs   renders public/ icons from the master (192/512, maskable 512,
                              Apple touch 180, favicon 32 and SVG) and the Android launcher icons
+scripts/android-apk.sh       names, packages and verifies APKs (used by the APK workflow)
 capacitor.config.json        Capacitor (Android app) configuration
 android/                     native Android project; web files are copied in by `cap sync`
 ```

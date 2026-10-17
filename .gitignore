@@ -7,3 +7,6 @@ dist/
 *.jks
 *.keystore
 keystore.properties
+
+# Packaged APKs (scripts/android-apk.sh, the APK workflow)
+apk-out/

@@ -3,11 +3,16 @@
 #   Push a version tag (git push origin v1.0.1)
 #     → builds a SIGNED release APK and attaches habit-v1.0.1.apk and its SHA-256 to
 #       the GitHub Release for that tag. The release itself is created by release.yml;
-#       this workflow waits for it and never creates a second one.
+#       this workflow waits for it and never creates a second one or replaces a file.
 #   Actions → Android APK → Run workflow
 #     → "debug": a test APK ("Habit Debug", installs alongside the real app), as a
 #       downloadable workflow artifact only.
 #     → "release": a signed APK as a workflow artifact only (nothing is attached).
+#
+# Jobs: build → verify-artifact (every run: downloads the artifact and checks it again)
+#       → attach (version tags only). The APK moves between jobs only as the workflow
+#       artifact habit-android-<variant>, never through job outputs: GitHub drops any
+#       output whose value contains a secret, and the key alias can be part of the name.
 #
 # Ordinary commits never trigger it. Release builds never fall back to unsigned.
 #
@@ -16,10 +21,10 @@
 #   ANDROID_KEYSTORE_PASSWORD keystore password
 #   ANDROID_KEY_ALIAS         key alias inside the keystore
 #   ANDROID_KEY_PASSWORD      key password
-# Recommended repository variable:
-#   ANDROID_SIGNING_CERT_SHA256  the release certificate's SHA-256 fingerprint; if set,
-#                                an APK signed with any other key fails the build, so
-#                                updates always install over earlier versions.
+# Required repository variable for release builds:
+#   ANDROID_SIGNING_CERT_SHA256  the release certificate's SHA-256 fingerprint; an APK
+#                                signed with any other key fails, so updates always
+#                                install over earlier versions.
 
 name: Android APK
 
@@ -41,17 +46,19 @@ concurrency:
   group: android-apk-${{ github.ref }}
   cancel-in-progress: false
 
+env:
+  VARIANT: ${{ github.event_name == 'push' && 'release' || inputs.variant }}
+  ARTIFACT: habit-android-${{ github.event_name == 'push' && 'release' || inputs.variant }}
+  APK_DIR: apk-out
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      apk: ${{ steps.package.outputs.apk }}
-    env:
-      VARIANT: ${{ github.event_name == 'push' && 'release' || inputs.variant }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Validate version tag
         if: github.event_name == 'push'
@@ -76,6 +83,7 @@ jobs:
           STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPECTED_CERT: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
         run: |
           missing=()
           [ -n "$KEYSTORE" ] || missing+=(ANDROID_KEYSTORE_BASE64)
@@ -86,23 +94,27 @@ jobs:
             echo "::error::A release APK must be signed, and these repository secrets are missing: ${missing[*]}. See README → Android app → Release signing. For a test build, run this workflow with variant 'debug'."
             exit 1
           fi
+          if ! [[ "$(echo "$EXPECTED_CERT" | tr -d ': ')" =~ ^[0-9A-Fa-f]{64}$ ]]; then
+            echo "::error::Set the repository variable ANDROID_SIGNING_CERT_SHA256 to the release certificate's SHA-256 fingerprint (64 hex digits, colons allowed), so the APK's signature can be checked. See README → Android app → Release signing."
+            exit 1
+          fi
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
 
-      - uses: android-actions/setup-android@v3
+      - uses: android-actions/setup-android@v4
         with:
           packages: platform-tools platforms;android-36 build-tools;36.0.0
 
       # Validates the Gradle wrapper checksum and caches Gradle downloads.
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - run: npm ci
       - run: npm test
@@ -128,56 +140,74 @@ jobs:
             ./gradlew --no-daemon assembleDebug
           fi
 
+      # Copies the APK into APK_DIR under its release name with a .sha256, and checks
+      # signature, certificate, package name and version (scripts/android-apk.sh).
       - name: Verify and package the APK
-        id: package
         env:
           EXPECTED_CERT: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
         run: |
-          build_tools="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
-          version=$(node -p "require('./package.json').version")
-          code=$(node -p "const [a,b,c]=require('./package.json').version.split('-')[0].split('.').map(Number); a*10000+b*100+c")
           if [ "$VARIANT" = release ]; then
             src=android/app/build/outputs/apk/release/app-release.apk
-            package=com.ayush8311.habit; name_version="$version"
           else
             src=android/app/build/outputs/apk/debug/app-debug.apk
-            package=com.ayush8311.habit.debug; name_version="$version-debug"
           fi
-          [ -f "$src" ] || { echo "::error::No APK at $src"; exit 1; }
+          scripts/android-apk.sh package "$VARIANT" "$src" "$APK_DIR"
 
-          # A valid, signed Android package with the expected identity and version.
-          "$build_tools/apksigner" verify --verbose --print-certs "$src" | tee apksigner.txt
-          badging=$("$build_tools/aapt2" dump badging "$src")
-          echo "$badging" | head -1
-          echo "$badging" | grep -q "package: name='$package' versionCode='$code' versionName='$name_version'" ||
-            { echo "::error::APK identity is not $package $name_version ($code)"; exit 1; }
-
-          if [ "$VARIANT" = release ] && [ -n "$EXPECTED_CERT" ]; then
-            actual=$(grep -m1 'certificate SHA-256 digest' apksigner.txt | awk '{print $NF}')
-            expected=$(echo "$EXPECTED_CERT" | tr -d ': ' | tr 'A-F' 'a-f')
-            [ "$actual" = "$expected" ] ||
-              { echo "::error::APK is signed with certificate $actual, not the Habit release key $expected. Updates would not install over earlier versions."; exit 1; }
-            echo "Signed with the Habit release key."
-          fi
-
-          if [ "$GITHUB_EVENT_NAME" = push ]; then label="$GITHUB_REF_NAME"; else label="v$version-${GITHUB_SHA::7}"; fi
-          if [ "$VARIANT" = debug ]; then apk="habit-$label-debug.apk"; else apk="habit-$label.apk"; fi
-          cp "$src" "$apk"
-          sha256sum "$apk" > "$apk.sha256"
-          cat "$apk.sha256"
-          echo "apk=$apk" >> "$GITHUB_OUTPUT"
-
-      - uses: actions/upload-artifact@v4
+      # Uploads only APK_DIR, which verification has checked holds exactly the APK and
+      # its .sha256: no keystore or signing properties.
+      - uses: actions/upload-artifact@v7
         with:
-          name: android-apk
-          path: |
-            ${{ steps.package.outputs.apk }}
-            ${{ steps.package.outputs.apk }}.sha256
+          name: ${{ env.ARTIFACT }}
+          path: ${{ env.APK_DIR }}/
           if-no-files-found: error
           retention-days: 30
 
-  attach:
+  # Runs for every build, including manual ones, with read-only access: proves the
+  # artifact downloads intact and is the APK a release would get.
+  verify-artifact:
     needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # Node reads package.json; Java runs apksigner. Both pinned rather than taken
+      # from whatever the runner image ships.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: build-tools;36.0.0
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: ${{ env.APK_DIR }}
+
+      - name: Verify the downloaded APK
+        env:
+          EXPECTED_CERT: ${{ vars.ANDROID_SIGNING_CERT_SHA256 }}
+        run: scripts/android-apk.sh verify "$VARIANT" "$APK_DIR"
+
+      - name: Summary
+        run: |
+          apk=$(scripts/android-apk.sh name "$VARIANT")
+          if [ "$GITHUB_EVENT_NAME" = push ]; then
+            echo "Verified $apk; the attach job adds it to the $GITHUB_REF_NAME release."
+          else
+            echo "Verified $apk. Manual build: download the '$ARTIFACT' artifact from this run's Summary page. Nothing is published."
+          fi
+
+  attach:
+    needs: verify-artifact
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
@@ -186,11 +216,23 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
       TAG: ${{ github.ref_name }}
-      APK: ${{ needs.build.outputs.apk }}
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
         with:
-          name: android-apk
+          persist-credentials: false
+
+      - uses: actions/download-artifact@v7
+        with:
+          name: ${{ env.ARTIFACT }}
+          path: ${{ env.APK_DIR }}
+
+      - name: Check the downloaded files
+        run: |
+          apk=$(scripts/android-apk.sh name release)
+          [ "$apk" = "habit-$TAG.apk" ] || { echo "::error::Expected habit-$TAG.apk, not $apk"; exit 1; }
+          [ "$(cd "$APK_DIR" && LC_ALL=C ls -A)" = "$(printf '%s\n%s' "$apk" "$apk.sha256")" ] ||
+            { echo "::error::The artifact must contain exactly $apk and $apk.sha256"; exit 1; }
+          (cd "$APK_DIR" && sha256sum -c "$apk.sha256")
 
       # release.yml publishes the release after its own checks (including the live
       # site); wait for it rather than creating a second release.
@@ -206,10 +248,17 @@ jobs:
 
       - name: Attach the APK
         run: |
+          apk=$(scripts/android-apk.sh name release)
           assets=$(gh release view "$TAG" --json assets --jq '.assets[].name')
-          if grep -qxF "$APK" <<<"$assets"; then
-            echo "$APK is already attached to $TAG; leaving the published file unchanged."
+          has() { grep -qxF "$1" <<<"$assets"; }
+          if has "$apk" && has "$apk.sha256"; then
+            echo "$apk and its checksum are already attached to $TAG; leaving the published files unchanged."
             exit 0
           fi
-          gh release upload "$TAG" "$APK" "$APK.sha256"
-          echo "Attached $APK and $APK.sha256 to $TAG."
+          if has "$apk" || has "$apk.sha256"; then
+            echo "::error::$TAG has only one of $apk and $apk.sha256 attached. Not replacing a published file: check the release's assets by hand."
+            exit 1
+          fi
+          # No --clobber: an asset that appeared meanwhile makes this fail rather than be replaced.
+          gh release upload "$TAG" "$APK_DIR/$apk" "$APK_DIR/$apk.sha256"
+          echo "Attached $apk and $apk.sha256 to $TAG."
