@@ -1,0 +1,87 @@
+.m-app {
+  --nav-height: 56px;
+  --screen-gutter: max(var(--space-4), env(safe-area-inset-left));
+  min-height: 100dvh;
+}
+
+.m-screen {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: max(var(--space-3), env(safe-area-inset-top)) var(--screen-gutter)
+    calc(var(--nav-height) + env(safe-area-inset-bottom) + var(--space-6));
+  padding-right: max(var(--space-4), env(safe-area-inset-right));
+  animation: m-screen-in var(--duration-slow) var(--ease-out);
+}
+
+@keyframes m-screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.m-banners {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: max(var(--space-2), env(safe-area-inset-top)) var(--space-4) var(--space-2);
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.m-banners + .m-screen {
+  padding-top: var(--space-2);
+}
+.m-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-full);
+  background: var(--color-fill);
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+.m-banner-warning {
+  background: #f8efe2;
+  color: #7c5420;
+}
+
+/* Shared mobile building blocks */
+.m-section {
+  margin-top: var(--space-6);
+}
+.m-section-title {
+  margin: 0 0 var(--space-2) var(--space-1);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.m-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+}
+.m-footnote {
+  margin: var(--space-2) var(--space-4) 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-text-secondary);
+}
+
+/* Focus and scroll-into-view stop above the tab bar instead of behind it. */
+html:has(.m-app) {
+  scroll-padding-top: max(var(--space-4), env(safe-area-inset-top));
+  scroll-padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--space-4));
+}

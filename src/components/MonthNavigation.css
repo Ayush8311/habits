@@ -1,0 +1,27 @@
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.month-nav-arrows {
+  display: flex;
+  padding: 2px;
+  border-radius: var(--radius-md);
+  background: var(--color-fill);
+}
+.month-nav-arrows .icon-btn {
+  width: 28px;
+  height: 26px;
+  border-radius: 6px;
+}
+.month-nav-arrows .icon-btn:hover {
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgba(29, 29, 31, 0.08);
+}
+
+@media (pointer: coarse) {
+  .month-nav-arrows .icon-btn {
+    width: 36px;
+    height: 32px;
+  }
+}

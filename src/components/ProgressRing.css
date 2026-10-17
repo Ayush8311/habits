@@ -1,0 +1,35 @@
+.ring {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.ring svg {
+  position: absolute;
+  inset: 0;
+}
+.ring-track {
+  fill: none;
+  stroke: var(--color-accent-soft);
+}
+.ring-progress {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-linecap: round;
+  transition:
+    stroke-dashoffset 600ms var(--ease-out),
+    opacity var(--duration) var(--ease-out);
+}
+.ring-value {
+  position: relative;
+  font-family: var(--font-rounded);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.ring-unit {
+  margin-left: 1px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}

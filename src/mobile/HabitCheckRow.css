@@ -1,0 +1,95 @@
+.check-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+
+.check-row-item + .check-row-item .check-row::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: calc(var(--space-4) + 44px + var(--space-3));
+  height: 0.5px;
+  background: var(--color-border-strong);
+}
+
+.check-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 68px;
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.check-row:active:not(:disabled) {
+  background: var(--color-fill);
+}
+.check-row:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-accent-ring);
+}
+.check-row.is-disabled {
+  cursor: default;
+}
+.check-row.is-disabled .check-row-text,
+.check-row.is-disabled .habit-icon {
+  opacity: 0.5;
+}
+
+.check-row-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.check-row-name {
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: color var(--duration) var(--ease-out);
+}
+.check-row.is-done .check-row-name {
+  color: var(--color-text-secondary);
+}
+.check-row-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+.check-row-meta.is-hot {
+  color: var(--color-warm);
+  font-weight: 500;
+}
+
+/* Reuses the calendar's check styling at a larger, finger-friendly size. */
+.check.check-row-box {
+  --size: 34px;
+  flex: none;
+  border-radius: 10px;
+  pointer-events: none;
+}
+.check-row:active:not(:disabled) .check-row-box {
+  transform: scale(0.9);
+}
+
+.check-row-chevron {
+  flex: none;
+  color: var(--color-text-tertiary);
+}

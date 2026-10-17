@@ -1,0 +1,83 @@
+:root {
+  /* Typography — the native system stack resolves to SF Pro on Apple devices. */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue',
+    'Segoe UI', Roboto, system-ui, sans-serif;
+  --font-rounded: ui-rounded, 'SF Pro Rounded', var(--font-sans);
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+
+  /* Colour */
+  --color-bg: #f6f5f1;
+  --color-surface: #ffffff;
+  --color-surface-muted: #faf9f6;
+  --color-fill: #f0efea;
+  --color-fill-strong: #e6e5df;
+  --color-weekend: rgba(29, 29, 31, 0.022);
+
+  --color-text: #1d1d1f;
+  --color-text-secondary: #6e6e73;
+  --color-text-tertiary: #a1a1a6;
+
+  --color-border: rgba(29, 29, 31, 0.08);
+  --color-border-strong: rgba(29, 29, 31, 0.14);
+
+  --color-accent: #4a9466;
+  --color-accent-hover: #3f8559;
+  --color-accent-pressed: #36734d;
+  --color-accent-soft: #e4f0e7;
+  --color-accent-tint: rgba(74, 148, 102, 0.065);
+  --color-accent-ring: rgba(74, 148, 102, 0.42);
+  --color-accent-text: #2f6b45;
+
+  --color-warm: #c0843a;
+  --color-danger: #c2463a;
+  --color-danger-hover: #ab3a2f;
+  --color-danger-soft: #fbeeec;
+
+  /* 8-point spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 40px;
+  --space-8: 48px;
+  --space-10: 64px;
+
+  /* Shape */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 999px;
+
+  --shadow-card: 0 1px 2px rgba(29, 29, 31, 0.04), 0 6px 20px -12px rgba(29, 29, 31, 0.1);
+  --shadow-raised: 0 2px 6px rgba(29, 29, 31, 0.05), 0 16px 40px -16px rgba(29, 29, 31, 0.2);
+  --shadow-modal: 0 2px 8px rgba(29, 29, 31, 0.06), 0 32px 80px -24px rgba(29, 29, 31, 0.32);
+  --focus-ring: 0 0 0 3px var(--color-accent-ring);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.36, 0.64, 1);
+  --duration-fast: 150ms;
+  --duration: 200ms;
+  --duration-slow: 250ms;
+
+  /* Layout */
+  --content-width: 1240px;
+  --habit-col: 208px;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --habit-col: 148px;
+  }
+}

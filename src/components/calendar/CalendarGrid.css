@@ -1,0 +1,165 @@
+.grid-scroll {
+  position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-left: var(--habit-col);
+  scrollbar-width: thin;
+}
+
+.grid {
+  --day-min: 29px;
+  width: 100%;
+  min-width: calc(var(--habit-col) + var(--day-count) * var(--day-min));
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.grid-wide {
+  --day-min: 52px;
+}
+.grid-col-habit {
+  width: var(--habit-col);
+}
+
+.grid th,
+.grid td {
+  padding: 0;
+  text-align: center;
+}
+
+/* Sticky habit column */
+.grid .grid-corner,
+.grid .grid-habit,
+.grid .grid-foot-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  text-align: left;
+}
+.grid-habit::after,
+.grid-corner::after,
+.grid-foot-label::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: -12px;
+  bottom: 0;
+  width: 12px;
+  pointer-events: none;
+  background: linear-gradient(to right, rgba(29, 29, 31, 0.06), transparent);
+  opacity: 0;
+  transition: opacity var(--duration) var(--ease-out);
+}
+.grid-scroll[data-scrolled] .grid-habit::after,
+.grid-scroll[data-scrolled] .grid-corner::after,
+.grid-scroll[data-scrolled] .grid-foot-label::after {
+  opacity: 1;
+}
+
+/* Day headers */
+.day-head {
+  padding: 0 0 var(--space-2);
+  vertical-align: bottom;
+  font-weight: 500;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+.day-head-weekday {
+  display: block;
+  margin-bottom: 2px;
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+  letter-spacing: 0.02em;
+}
+.day-head-number {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.grid-wide .day-head-weekday {
+  font-size: 12px;
+}
+.grid-wide .day-head-number {
+  width: 28px;
+  height: 28px;
+  font-size: var(--text-md);
+}
+.day-head.is-weekend .day-head-number {
+  color: var(--color-text-tertiary);
+}
+.day-head.is-today .day-head-weekday {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+.day-head.is-today .day-head-number {
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Rows */
+.grid-habit,
+.grid-cell {
+  height: 52px;
+  border-top: 1px solid var(--color-border);
+}
+.grid-row:first-child .grid-habit,
+.grid-row:first-child .grid-cell {
+  border-top-color: var(--color-border-strong);
+}
+
+.is-weekend.grid-cell,
+.is-weekend.grid-foot-cell,
+.is-weekend.day-head {
+  background: var(--color-weekend);
+}
+.is-today.grid-cell,
+.is-today.grid-foot-cell,
+.is-today.day-head {
+  background: var(--color-accent-tint);
+}
+
+/* Daily totals */
+.grid-foot-label {
+  padding: var(--space-3) var(--space-2) var(--space-2);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  border-top: 1px solid var(--color-border);
+}
+.grid-foot-cell {
+  padding: var(--space-3) 0 var(--space-2);
+  border-top: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+.meter {
+  position: relative;
+  display: inline-block;
+  width: 6px;
+  height: 20px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--color-fill);
+  vertical-align: middle;
+}
+.grid-wide .meter {
+  width: 8px;
+  height: 24px;
+}
+.meter-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--color-accent);
+  opacity: 0.45;
+  transform-origin: bottom;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.meter.is-today .meter-fill {
+  opacity: 1;
+}

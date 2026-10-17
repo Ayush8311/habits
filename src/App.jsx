@@ -1,0 +1,17 @@
+import { DesktopApp } from './DesktopApp.jsx';
+import { useHabitStore } from './hooks/useHabitStore.js';
+import { MOBILE_QUERY, useMediaQuery } from './hooks/useMediaQuery.js';
+import { useToday } from './hooks/useToday.js';
+import { MobileApp } from './mobile/MobileApp.jsx';
+
+/**
+ * Owns the shared habit store and picks a layout. Both layouts read and write
+ * the same data, so resizing a window or rotating a tablet never loses state.
+ */
+export default function App() {
+  const todayKey = useToday();
+  const store = useHabitStore();
+  const isMobile = useMediaQuery(MOBILE_QUERY);
+
+  return isMobile ? <MobileApp store={store} todayKey={todayKey} /> : <DesktopApp store={store} todayKey={todayKey} />;
+}

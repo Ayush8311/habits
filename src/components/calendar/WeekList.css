@@ -1,0 +1,68 @@
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  justify-items: center;
+}
+
+.week-list-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--space-2) 0;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.week-day-name {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
+}
+.week-day-number {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+}
+.week-day.is-weekend .week-day-number {
+  color: var(--color-text-tertiary);
+}
+.week-day.is-today .week-day-name {
+  color: var(--color-accent-text);
+  font-weight: 600;
+}
+.week-day.is-today .week-day-number {
+  background: var(--color-accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+.week-items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.week-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.week-item:last-child {
+  border-bottom: 0;
+}
+.week-item .habit-label {
+  width: 100%;
+  margin-left: -6px;
+}
