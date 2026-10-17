@@ -1,0 +1,146 @@
+# Publishes a GitHub Release when a version tag is pushed, for example:
+#
+#   git tag -a v1.0.0 -m "Habit v1.0.0" && git push origin v1.0.0
+#
+# Ordinary commits never trigger it. Before anything is published it checks that:
+#   - the tag is semantic (vMAJOR.MINOR.PATCH, optionally -rc.1 etc. for pre-releases),
+#   - it matches "version" in package.json and points at a commit on main,
+#   - release notes exist in .github/release-notes/<tag>.md,
+#   - tests pass, the production build succeeds and passes scripts/verify-dist.mjs,
+#   - the live app is reachable (GitHub Pages, or the APP_URL repository variable).
+# Re-running it for a tag that already has a release changes nothing.
+#
+# "Run workflow" from the Actions tab is a dry run: every check except publishing.
+#
+# Deployment is separate: deploy-pages.yml publishes the website; this workflow only
+# records the version. Habit is a web app (PWA), so the release carries notes and a
+# zipped static build for self-hosting, never an APK/IPA.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Version to check, e.g. v1.0.0 (dry run: nothing is published)'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate version tag
+        run: |
+          if ! [[ "$TAG" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$TAG' is not a version tag like v1.2.3 or v1.2.3-rc.1"; exit 1
+          fi
+          version=$(node -p "require('./package.json').version")
+          if [ "v$version" != "$TAG" ]; then
+            echo "::error::Tag $TAG does not match package.json version $version. Run: npm version ${TAG#v} --no-git-tag-version, commit, then tag."; exit 1
+          fi
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::$TAG must point at a commit on main"; exit 1
+          fi
+          if [ ! -s ".github/release-notes/$TAG.md" ]; then
+            echo "::error::Write the release notes first: .github/release-notes/$TAG.md"; exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+
+      # Built for the root of a domain: the attachment is for self-hosting. The
+      # GitHub Pages site is built separately by deploy-pages.yml with its own base path.
+      - run: npm run build
+      - run: npm run verify
+
+      - name: Package the web build
+        run: |
+          cd dist && zip -qr "../habit-$TAG-web.zip" . && cd ..
+          sha256sum "habit-$TAG-web.zip" > "habit-$TAG-web.zip.sha256"
+          cat "habit-$TAG-web.zip.sha256"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-files
+          path: |
+            habit-${{ env.TAG }}-web.zip
+            habit-${{ env.TAG }}-web.zip.sha256
+          retention-days: 7
+
+  publish:
+    needs: build
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release
+      pages: read # look up the GitHub Pages URL
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      APP_URL: ${{ vars.APP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Skip if this release already exists
+        id: existing
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; leaving it unchanged."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Find and check the live app
+        if: steps.existing.outputs.exists != 'true'
+        run: |
+          url="${APP_URL:-$(gh api "repos/$GH_REPO/pages" --jq .html_url 2>/dev/null || true)}"
+          if [ -z "$url" ]; then
+            echo "::error::No deployed app found. Enable GitHub Pages and run 'Deploy to GitHub Pages', or set the APP_URL repository variable."; exit 1
+          fi
+          url="${url%/}/"
+          if ! curl -fsSL "${url}manifest.webmanifest" | grep -q '"name":"Habit"'; then
+            echo "::error::$url does not serve Habit's manifest yet. Deploy the site, then re-run this workflow."; exit 1
+          fi
+          echo "Live app: $url"
+          echo "LIVE_URL=$url" >> "$GITHUB_ENV"
+
+      - uses: actions/download-artifact@v4
+        if: steps.existing.outputs.exists != 'true'
+        with:
+          name: release-files
+
+      - name: Publish the release
+        if: steps.existing.outputs.exists != 'true'
+        run: |
+          notes=".github/release-notes/$TAG.md"
+          title=$(head -n 1 "$notes" | sed 's/^# *//')
+          tail -n +2 "$notes" | sed "s#{{APP_URL}}#$LIVE_URL#g" > release-body.md
+          prerelease=()
+          [[ "$TAG" == *-* ]] && prerelease=(--prerelease)
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "$title" \
+            --notes-file release-body.md \
+            --generate-notes \
+            "${prerelease[@]}" \
+            "habit-$TAG-web.zip" "habit-$TAG-web.zip.sha256"

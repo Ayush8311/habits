@@ -15,6 +15,7 @@ npm run dev        # http://localhost:5173 — desktop and mobile layouts, no se
 npm test           # unit tests for dates, streaks, stats and storage
 npm run build      # production build + service worker in dist/
 npm run preview    # serve dist/ at http://localhost:4173 — use this to test offline and installing
+npm run verify     # check dist/: manifest, icons, service worker, linked assets
 npm run icons      # regenerate every icon in public/ from assets/habit-icon.svg
 ```
 
@@ -52,6 +53,30 @@ Cloudflare) and `vercel.json` set cache headers so updates reach installed apps 
 ```bash
 BASE_PATH=/habits/ npm run build   # assets, manifest and service worker all use /habits/
 ```
+
+## Releases
+
+Versions follow [semantic versioning](https://semver.org): `v1.0.1` for fixes, `v1.1.0` for new
+features that keep existing data working, `v2.0.0` for breaking changes (for example a data
+format older versions can't read). Pre-releases use a suffix such as `v1.1.0-rc.1`.
+
+Ordinary commits never create a release. To publish one:
+
+1. Write the notes in `.github/release-notes/vX.Y.Z.md` (copy the previous file's sections:
+   What's new, Improvements, Bug fixes, Installation, Known limitations). `{{APP_URL}}` is
+   replaced with the live app address.
+2. Set the version: `npm version X.Y.Z --no-git-tag-version`, then commit and push to `main`.
+3. Optional dry run: **Actions → Release → Run workflow**, enter `vX.Y.Z`.
+4. Tag and push: `git tag -a vX.Y.Z -m "Habit vX.Y.Z" && git push origin vX.Y.Z`
+
+`.github/workflows/release.yml` then checks the tag, runs the tests, builds and verifies the
+app, confirms the live site is up and publishes the release with the notes, an automatic
+changelog and `habit-vX.Y.Z-web.zip` (a static build for self-hosting). Tags are never reused:
+a fix after a release gets the next patch version. Re-running the workflow for an existing
+release changes nothing.
+
+Habit is installed from the website, not from the release: GitHub Releases is the version
+history. Deploying the website (`deploy-pages.yml`) is separate from releasing.
 
 ## Install the app
 

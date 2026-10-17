@@ -1,14 +1,15 @@
 {
   "name": "habits",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "verify": "node scripts/verify-dist.mjs"
   },
   "dependencies": {
     "emoji-picker-react": "^4.22.3",
