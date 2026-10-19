@@ -3,6 +3,7 @@
 import { formatWeekday, getRecentDays } from './dates.js';
 import {
   countCompletedOn,
+  getApplicableHabits,
   getHabitStreaks,
   getHabitProgress,
   getOverallProgress,
@@ -13,8 +14,9 @@ import {
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
 
 function describeToday(habits, completions, todayKey) {
-  const total = habits.length;
+  const total = getApplicableHabits(habits, completions, todayKey).length;
   const done = countCompletedOn(habits, completions, todayKey);
+  if (total === 0) return 'No habits are scheduled today.';
   if (done === total) {
     return total === 1 ? 'You completed your habit today.' : `You completed all ${total} habits today.`;
   }
@@ -105,14 +107,16 @@ export function buildInsights({ habits, completions, todayKey, week, monthKeys }
 export function buildTodayInsight({ habits, completions, todayKey, week }) {
   if (habits.length === 0) return 'Add a habit to start tracking your day.';
 
+  const due = getApplicableHabits(habits, completions, todayKey);
+  if (due.length === 0) return 'Nothing scheduled today. Enjoy the rest day.';
   const done = countCompletedOn(habits, completions, todayKey);
-  if (done === habits.length) {
-    return habits.length === 1 ? 'Done for today. Nicely kept.' : `All ${habits.length} habits done. A complete day.`;
+  if (done === due.length) {
+    return due.length === 1 ? 'Done for today. Nicely kept.' : `All ${due.length} habits done. A complete day.`;
   }
 
-  const atRisk = habits
+  const atRisk = due
     .filter((habit) => !completions[habit.id]?.[todayKey])
-    .map((habit) => ({ habit, streak: getHabitStreaks(habit.id, completions, todayKey).current }))
+    .map((habit) => ({ habit, streak: getHabitStreaks(habit, completions, todayKey).current }))
     .sort((a, b) => b.streak - a.streak)[0];
   if (atRisk && atRisk.streak >= 3) {
     return `${atRisk.habit.name} is on a ${atRisk.streak}-day streak. Keep it going today.`;
@@ -121,8 +125,8 @@ export function buildTodayInsight({ habits, completions, todayKey, week }) {
   const trend = describeTrend(week);
   if (trend && trend.direction !== 'flat') return trend.text;
 
-  const remaining = habits.length - done;
+  const remaining = due.length - done;
   return done === 0
-    ? `${plural(habits.length, 'habit')} lined up for today.`
+    ? `${plural(due.length, 'habit')} lined up for today.`
     : `${done} done, ${remaining} to go.`;
 }

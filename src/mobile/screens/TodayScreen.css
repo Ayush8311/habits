@@ -77,3 +77,102 @@
     padding: var(--space-4);
   }
 }
+
+/* ── Combined page: compact header ── */
+.home-header {
+  display: grid;
+  /* Fixed outer columns: Edit ⇄ Done can never shift the ring. */
+  grid-template-columns: minmax(0, 1fr) 44px 76px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-1) var(--space-1);
+}
+.home-date {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  min-height: 48px;
+  margin: 0 0 0 calc(-1 * var(--space-2));
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.home-date svg {
+  flex: none;
+  color: var(--color-accent);
+}
+.home-date:active {
+  background: var(--color-fill);
+}
+.home-date:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.home-date-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.home-date-weekday {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+.home-date-day {
+  overflow: hidden;
+  font-size: clamp(15px, 4.6vw, 18px);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+/* Fixed box: the ring never moves or resizes as it fills. */
+.ring.home-progress {
+  width: 44px;
+  height: 44px;
+}
+.ring.home-progress .ring-value {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.ring.home-progress .ring-unit {
+  margin-left: 0;
+  font-size: 8px;
+}
+.home-edit {
+  display: flex;
+  justify-content: flex-end;
+}
+/* Whichever section comes first sits closer to the compact header. */
+.today.is-combined .home-header + .home-habits,
+.today.is-combined .home-header + .home-tasks > .m-section:first-child {
+  margin-top: var(--space-4);
+}
+
+.home-tasks {
+  scroll-margin-top: var(--space-4);
+}
+.home-tasks-empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1) var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+}
+.home-tasks-empty svg {
+  color: var(--color-accent);
+}
+.home-tasks-empty .btn {
+  margin-left: -10px;
+}

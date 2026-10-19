@@ -54,7 +54,7 @@ test('old habits gain defaults; emoji and custom colours survive a round trip', 
     habits: [{ id: 'a', name: 'Read', icon: 'book', color: 'ocean', createdAt: '2026-09-01' }],
     completions: { a: { '2026-10-01': true } },
   });
-  assert.deepEqual(legacy.habits[0], { id: 'a', name: 'Read', icon: 'book', emoji: null, color: 'ocean', createdAt: '2026-09-01' });
+  assert.deepEqual(legacy.habits[0], { id: 'a', name: 'Read', icon: 'book', emoji: null, color: 'ocean', createdAt: '2026-09-01', schedule: null });
   assert.deepEqual(legacy.completions, { a: { '2026-10-01': true } });
 
   const custom = sanitizeState({

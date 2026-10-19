@@ -45,7 +45,7 @@ test('default habits start with every statistic at zero and no streak messages',
 
   assert.deepEqual(getOverallProgress(habits, completions, keys), { done: 0, total: 7, rate: 0 });
   for (const habit of habits) {
-    assert.deepEqual(getHabitStreaks(habit.id, completions, TODAY), { current: 0, best: 0 });
+    assert.deepEqual(getHabitStreaks(habit, completions, TODAY), { current: 0, best: 0 });
     assert.deepEqual(getHabitProgress(habit, completions, keys), { done: 0, total: 1, rate: 0 });
   }
   assert.deepEqual(getStreakLeaders(habits, completions, TODAY), {
@@ -73,7 +73,7 @@ test('streaks and progress count only real check-ins', () => {
   state.completions[read.id] = { '2026-10-15': true, '2026-10-16': true, '2026-10-17': true };
   const { habits, completions } = state;
 
-  assert.deepEqual(getHabitStreaks(read.id, completions, TODAY), { current: 3, best: 3 });
+  assert.deepEqual(getHabitStreaks(read, completions, TODAY), { current: 3, best: 3 });
   assert.deepEqual(getOverallProgress(habits, completions, [TODAY]), { done: 1, total: 7, rate: 1 / 7 });
   const week = getWeekComparison(habits, completions, TODAY);
   const insights = buildInsights({ habits, completions, todayKey: TODAY, week, monthKeys: monthKeys(TODAY) });
@@ -102,6 +102,6 @@ test('an imported backup keeps its full history', () => {
   });
   const state = parseState(backup);
   assert.deepEqual(Object.keys(state.completions.h1), ['2026-08-01', '2026-08-02', '2026-10-16', '2026-10-17']);
-  assert.deepEqual(getHabitStreaks('h1', state.completions, TODAY), { current: 2, best: 2 });
+  assert.deepEqual(getHabitStreaks(state.habits[0], state.completions, TODAY), { current: 2, best: 2 });
   assert.deepEqual(sanitizeState(state), state);
 });

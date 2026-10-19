@@ -93,6 +93,37 @@
   color: var(--color-text-tertiary);
 }
 
-.settings-group-spaced {
-  margin-top: var(--space-3);
+.settings-appearance {
+  padding: var(--space-3);
+}
+.settings-appearance .segmented {
+  width: 100%;
+}
+.settings-appearance-hint {
+  margin: var(--space-2) var(--space-1) 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.m-section-title.settings-subtitle {
+  margin-top: var(--space-5);
+}
+.settings-appearance .segmented-option {
+  height: 36px;
+  min-width: 0;
+  padding: 0 var(--space-2);
+}
+.settings-appearance .segmented-thumb {
+  border-radius: var(--radius-full);
+}
+
+.settings-subsetting {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 0.5px solid var(--color-border-strong);
+}
+.settings-subsetting-label {
+  margin: 0 var(--space-1) var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
 }

@@ -30,6 +30,7 @@ export function MonthlyOverview({
   todayKey,
   habitCount,
   todayDone,
+  todayDue,
   monthProgress,
   eligibleDays,
   direction,
@@ -59,7 +60,7 @@ export function MonthlyOverview({
       <div className="overview-metrics">
         <dl className="overview-stats">
           <OverviewStat label="Habits" value={habitCount} />
-          <OverviewStat label="Done today" value={todayDone} total={habitCount} />
+          <OverviewStat label="Done today" value={todayDone} total={todayDue} />
           <OverviewStat label={`Check-ins in ${formatMonthName(cursorKey)}`} value={monthProgress.done} />
         </dl>
         <div className="overview-progress">

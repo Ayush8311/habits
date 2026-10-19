@@ -4,8 +4,8 @@ A calm, Apple-inspired habit tracker. One React + Vite project with two layouts 
 the same data:
 
 - **Desktop** (wider than 820px): overview, full monthly grid and insights on one page.
-- **Mobile** (820px and narrower): an installable app with Today, Calendar, Insights and
-  Settings tabs, built to live on your phone's home screen and work offline.
+- **Mobile** (820px and narrower): an installable app with Today, Tasks, Calendar, Insights
+  and Settings tabs, built to live on your phone's home screen and work offline.
 - **Android app**: the same app packaged with Capacitor as an APK (see [Android app](#android-app)).
 
 ## Run locally
@@ -244,10 +244,59 @@ backup to move habits between them.
   when it returns to the foreground and hourly) and shows **"A new version is ready."** with a
   **Reload** button. Nothing reloads without you choosing to.
 
+## Using Habit
+
+- **Habits** repeat on the weekdays you choose (**Repeat on** in the habit form; every day by
+  default). Days a habit isn't scheduled are shown as "Not scheduled" and never count as missed.
+- **Tasks** are one-off to-dos with an optional due date, optional time and optional Low /
+  Medium / High priority. They live in the Tasks tab (and a Tasks section on desktop) and never
+  affect habit statistics.
+- **Adding**: on Today (and Tasks), tap the bar at the bottom for **Add new** (Habit or Task),
+  or swipe it right for a new task and left for a new habit. The name field is focused at once.
+- **Page layout** (Settings → Page layout): **Separate pages** (default: habits on Today, tasks
+  on their own Tasks page) or **Combined page** (habits and tasks together on Today under a
+  compact header, no Tasks tab). Switching changes only the layout, never any data.
+- **Moving between pages**: swipe left or right on a page, or use the tab bar. Swipes that start
+  on the Add new bar, a drag handle, a wheel or slider, a text field, an open sheet, or the
+  screen edge (Android's back gesture) are left alone.
+- **Reordering**: tap **Edit**, then drag a row by its handle (or focus the handle and use the
+  arrow keys). Habits and tasks are ordered separately, in your own order; nothing is sorted
+  automatically.
+- **Colours**: preset swatches, or **Custom** for a hue slider and a saturation/brightness
+  board. A custom colour is applied only when you tap **Apply color**.
+- **Appearance**: Settings → Appearance → Light (default), Dark or System. On desktop it is in
+  the gear menu.
+
+### How the figures are calculated
+
+Every figure uses one definition (`src/lib/stats.js`): a habit is **expected** on a day when the
+day is one of its scheduled weekdays and on or after the day it was created.
+
+- **Completion rate** (Today, This week, month consistency, per habit, Summary): expected habit
+  instances that were checked in ÷ expected habit instances.
+- **Perfect Day**: a past or current day with at least one expected habit, on which every
+  expected habit was checked in. Days with nothing expected are never Perfect Days.
+- **Best Week**: of the last 8 Monday–Sunday weeks (the current week up to today), the highest
+  completion rate as defined above; weeks with nothing expected or nothing checked in are
+  skipped, and a tie keeps the earlier week.
+- **Best day (last 30 days)**: the day with the most expected habits checked in.
+- **Streaks**: consecutive scheduled days with a check-in, counting back from today (an
+  unchecked today doesn't break it yet). Unscheduled days are skipped. Back-filled check-ins
+  count towards streaks even from before a habit was created.
+- **Week comparison**: this week's rate against last week's, shown only when last week has
+  check-ins.
+
+Fallbacks for older data: a habit without a schedule is expected every day; its current schedule
+applies to its whole history (earlier schedules aren't recorded); a habit without a creation date
+counts from its first check-in. Check-ins on days a habit isn't expected stay stored and visible
+but don't count towards rates or Perfect Days.
+
 ## Your data
 
-Habits and check-ins are stored in the browser's LocalStorage under `habit.state.v1` (the same
-key the desktop version has always used, so existing data carries over).
+Habits, check-ins, tasks and the appearance setting are stored in the browser's LocalStorage
+under `habit.state.v1` (the same key the desktop version has always used, so existing data
+carries over). Backups contain all of it. Importing a backup from before tasks existed replaces
+habits and check-ins but keeps the tasks and appearance already on the device.
 
 **Phone and desktop do not synchronise.** Each browser keeps its own copy. To move data, use
 **Export backup** on one device (Settings tab on mobile, the gear menu on desktop) and
@@ -270,14 +319,20 @@ src/
   App.jsx                    owns the store, chooses the desktop or mobile layout
   DesktopApp.jsx             desktop layout
   mobile/                    MobileApp (tabs), BottomNav, ScreenHeader, HabitCheckRow, MonthHeatmap
-    screens/                 TodayScreen, CalendarScreen, InsightsScreen, SettingsScreen
+    AddActionBar.jsx         Today's swipe/tap add bar; AddNewSheet.jsx is its Add new sheet
+    screens/                 TodayScreen, TasksScreen, CalendarScreen, InsightsScreen, SettingsScreen
   components/                shared UI: calendar grid, insights, habit form, dialogs, buttons
+    tasks/                   task list, task form (wheels, keyboard handling), task dialogs
+    ColorPicker.jsx          habit colour swatches, custom colour and hex input
+    ui/WheelPicker.jsx       scroll-snap wheel columns (date and time pickers)
     useHabitDialogs.jsx      add/edit/delete/confirm dialogs used by both layouts
     useBackupActions.jsx     export/import
   hooks/                     useHabitStore, useToday, media queries, online status
   data/repository.js         storage interface (LocalStorage today)
+  data/appReducer.js         every data change, as a pure reducer
   data/defaultHabits.js      habits a new installation starts with (no check-ins)
-  lib/                       pure logic: dates, stats, insights, storage validation, backup
+  lib/                       pure logic: dates, stats, insights, schedules, tasks, theme,
+                             storage validation, backup
   pwa.js                     service worker registration, install prompt
 assets/habit-icon.svg        master app icon (edit this, then `npm run icons`)
 scripts/generate-icons.mjs   renders public/ icons from the master (192/512, maskable 512,
@@ -292,12 +347,22 @@ android/                     native Android project; web files are copied in by 
 ```js
 {
   version: 1,
-  habits: [{ id, name, icon, color, createdAt: 'YYYY-MM-DD' }],
-  completions: { [habitId]: { 'YYYY-MM-DD': true } }
+  habits: [{ id, name, icon, emoji, color, createdAt: 'YYYY-MM-DD',
+             schedule: null | [0–6, …] }],          // null = every day; 0 = Sunday
+  completions: { [habitId]: { 'YYYY-MM-DD': true } },
+  tasks: [{ id, name, notes, dueDate: null | 'YYYY-MM-DD', dueTime: null | 'HH:MM',
+            priority: null | 'low' | 'medium' | 'high', completedAt: null | ms, createdAt: ms }],
+  preferences: { theme?: 'light' | 'dark' | 'system',       // absent = light
+                 pageLayout?: 'separate' | 'combined' }  // absent = separate
 }
 ```
 
-Dates are built from local calendar fields (never `toISOString`) and parsed at local noon, so
-time zones and daylight-saving changes can't move a check-in to another day. A habit's rates
-count from the day it was created (or an earlier back-filled check-in), so new habits aren't
-scored as having missed earlier days.
+Habits and tasks are shown in the order of their arrays, so that order is what Edit-mode
+reordering changes and what backups carry; older backups simply keep the order they were saved
+in. `tasks`, `preferences` and `schedule` are optional additions to schema version 1: data saved by
+earlier versions simply doesn't have them and reads exactly as before, so no migration runs. A
+task's time is only kept with a date, and a missing priority stays missing (it is never shown or
+saved as a default). Dates are built from local calendar fields (never `toISOString`) and parsed
+at local noon, so time zones and daylight-saving changes can't move a check-in or due date to
+another day. A habit's rates count from the day it was created, so new habits aren't scored as
+having missed earlier days.

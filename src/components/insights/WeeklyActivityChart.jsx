@@ -1,8 +1,7 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { usePrefersReducedMotion } from '../../hooks/useMediaQuery.js';
 import { formatFullDate } from '../../lib/dates.js';
 import { toPercent } from '../../lib/stats.js';
-import { chartTheme } from './chartTheme.js';
+import { useChartTheme } from './chartTheme.js';
 import './WeeklyActivityChart.css';
 
 function ActivityTooltip({ active, payload }) {
@@ -28,7 +27,7 @@ function getTicks(max) {
 }
 
 export function WeeklyActivityChart({ data, habitCount }) {
-  const reducedMotion = usePrefersReducedMotion();
+  const chartTheme = useChartTheme();
   const description = data.map((day) => `${day.fullLabel}: ${day.done} of ${day.total}`).join('; ');
 
   return (
@@ -64,9 +63,10 @@ export function WeeklyActivityChart({ data, habitCount }) {
             radius={[6, 6, 6, 6]}
             maxBarSize={40}
             background={{ fill: chartTheme.track, radius: 6 }}
-            isAnimationActive={!reducedMotion}
-            animationDuration={450}
-            animationEasing="ease-out"
+            // Recharts animates bars by re-rendering React every frame (46 commits and a
+            // 50 ms task when Insights opened, measured on the phone); the chart fades
+            // in with CSS instead (WeeklyActivityChart.css).
+            isAnimationActive={false}
           >
             {data.map((day) => (
               <Cell key={day.key} fill={day.isToday ? chartTheme.barToday : chartTheme.bar} />

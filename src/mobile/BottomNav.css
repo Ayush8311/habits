@@ -5,15 +5,15 @@
   left: 0;
   z-index: 40;
   padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  background: color-mix(in srgb, var(--color-bg) 90%, transparent);
+  /* Near-opaque instead of a live blur, which the GPU had to redraw every frame
+     while a sheet or page moved behind or over it (measured on the phone). */
+  background: color-mix(in srgb, var(--color-bg) 97%, transparent);
   border-top: 0.5px solid var(--color-border-strong);
-  -webkit-backdrop-filter: saturate(1.6) blur(20px);
-  backdrop-filter: saturate(1.6) blur(20px);
 }
 
 .bottom-nav-list {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--tab-count, 5), minmax(0, 1fr));
   max-width: 640px;
   height: var(--nav-height, 56px);
   margin: 0 auto;

@@ -4,12 +4,15 @@ import { HabitCalendar } from './components/calendar/HabitCalendar.jsx';
 import { Header } from './components/Header.jsx';
 import { InsightsSection } from './components/insights/InsightsSection.jsx';
 import { MonthlyOverview } from './components/MonthlyOverview.jsx';
+import { TasksSection } from './components/tasks/TasksSection.jsx';
+import { useTaskDialogs } from './components/tasks/useTaskDialogs.jsx';
 import { useBackupActions } from './components/useBackupActions.jsx';
 import { useHabitDialogs } from './components/useHabitDialogs.jsx';
 import { useInstallFlow } from './components/install/useInstallFlow.jsx';
 import { COMPACT_QUERY, useMediaQuery } from './hooks/useMediaQuery.js';
 import { addDays, getMonthDays, getMonthOf, isSameMonth, shiftMonth } from './lib/dates.js';
-import { countCompletedOn, eligibleKeys, getOverallProgress } from './lib/stats.js';
+import { getTheme } from './lib/preferences.js';
+import { countApplicableOn, countCompletedOn, eligibleKeys, getOverallProgress } from './lib/stats.js';
 import './DesktopApp.css';
 
 const plural = (count, word) => `${count} ${word}${count === 1 ? '' : 's'}`;
@@ -40,6 +43,7 @@ export function DesktopApp({ store, todayKey }) {
   );
   const monthProgress = useMemo(() => getOverallProgress(habits, completions, monthKeys), [habits, completions, monthKeys]);
   const todayDone = useMemo(() => countCompletedOn(habits, completions, todayKey), [habits, completions, todayKey]);
+  const todayDue = useMemo(() => countApplicableOn(habits, completions, todayKey), [habits, completions, todayKey]);
   const totalCheckIns = useMemo(
     () => Object.values(completions).reduce((sum, record) => sum + Object.keys(record).length, 0),
     [completions],
@@ -47,6 +51,7 @@ export function DesktopApp({ store, todayKey }) {
 
   const { openHabitForm, confirm, dialogs } = useHabitDialogs({ store, todayKey, monthKeys, monthKey: cursorKey });
   const backup = useBackupActions({ store, confirm });
+  const { openTaskForm, taskDialog } = useTaskDialogs({ store, todayKey, confirm });
   const installFlow = useInstallFlow();
 
   return (
@@ -56,13 +61,15 @@ export function DesktopApp({ store, todayKey }) {
         onAddHabit={() => openHabitForm()}
         summary={`${plural(habits.length, 'habit')}, ${plural(totalCheckIns, 'check-in')}`}
         installFlow={installFlow}
+        theme={getTheme(store.state.preferences)}
+        onThemeChange={store.setTheme}
         settingsActions={{
           export: backup.exportData,
           import: backup.chooseFile,
           reset: () =>
           confirm({
             title: 'Reset to default habits?',
-            message: 'Your habits and check-ins will be replaced with the default habits, with no check-ins.',
+            message: 'Your habits and check-ins will be replaced with the default habits, with no check-ins. Your tasks stay.',
             confirmLabel: 'Reset',
             onConfirm: store.resetToDefaults,
           }),
@@ -90,6 +97,7 @@ export function DesktopApp({ store, todayKey }) {
           todayKey={todayKey}
           habitCount={habits.length}
           todayDone={todayDone}
+          todayDue={todayDue}
           monthProgress={monthProgress}
           eligibleDays={monthKeys.length}
           direction={direction}
@@ -113,9 +121,12 @@ export function DesktopApp({ store, todayKey }) {
           onAddHabit={() => openHabitForm()}
         />
 
+        <TasksSection store={store} todayKey={todayKey} onAddTask={openTaskForm} onEditTask={openTaskForm} />
+
         <InsightsSection habits={habits} completions={completions} todayKey={todayKey} cursorKey={cursorKey} />
       </main>
 
+      {taskDialog}
       {dialogs}
       {installFlow.dialog}
     </div>

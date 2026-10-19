@@ -1,7 +1,15 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { Download, Eraser, HardDrive, RotateCcw, Settings2, Upload } from 'lucide-react';
+import { Check, Download, Eraser, HardDrive, Monitor, Moon, RotateCcw, Settings2, Sun, Upload } from 'lucide-react';
 import { IconButton } from './ui/Button.jsx';
 import './SettingsMenu.css';
+
+const THEMES = [
+  { value: 'light', label: 'Light', icon: Sun },
+  { value: 'dark', label: 'Dark', icon: Moon },
+  { value: 'system', label: 'System', icon: Monitor },
+];
+
+const ITEM_SELECTOR = '[role="menuitem"], [role="menuitemradio"]';
 
 const ITEMS = [
   {
@@ -31,8 +39,11 @@ const ITEMS = [
   },
 ];
 
-/** `actions` maps each item id (export, import, reset, clear) to its handler. */
-export function SettingsMenu({ actions, summary }) {
+/**
+ * `actions` maps each item id (export, import, reset, clear) to its handler.
+ * `theme` / `onThemeChange` drive the Appearance choices (Light, Dark, System).
+ */
+export function SettingsMenu({ actions, summary, theme, onThemeChange }) {
   const [open, setOpen] = useState(false);
   const menuId = useId();
   const rootRef = useRef(null);
@@ -41,7 +52,7 @@ export function SettingsMenu({ actions, summary }) {
 
   useEffect(() => {
     if (!open) return undefined;
-    menuRef.current?.querySelector('[role="menuitem"]')?.focus();
+    menuRef.current?.querySelector(ITEM_SELECTOR)?.focus();
     const onPointerDown = (event) => {
       if (!rootRef.current?.contains(event.target)) setOpen(false);
     };
@@ -55,7 +66,7 @@ export function SettingsMenu({ actions, summary }) {
   };
 
   const onMenuKeyDown = (event) => {
-    const items = [...menuRef.current.querySelectorAll('[role="menuitem"]')];
+    const items = [...menuRef.current.querySelectorAll(ITEM_SELECTOR)];
     const index = items.indexOf(document.activeElement);
     const moves = { ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: items.length - 1 };
     if (event.key === 'Escape') {
@@ -87,6 +98,32 @@ export function SettingsMenu({ actions, summary }) {
       />
       {open && (
         <div id={menuId} ref={menuRef} className="menu" role="menu" aria-label="Settings" onKeyDown={onMenuKeyDown}>
+          {onThemeChange && (
+            <>
+              <p className="menu-label" aria-hidden="true">
+                Appearance
+              </p>
+              <div role="group" aria-label="Appearance">
+                {THEMES.map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={theme === value}
+                    tabIndex={-1}
+                    className="menu-item menu-item-radio"
+                    onClick={() => onThemeChange(value)}
+                  >
+                    <Icon size={16} strokeWidth={1.8} aria-hidden="true" />
+                    <span className="menu-item-text">
+                      <span className="menu-item-title">{label}</span>
+                    </span>
+                    {theme === value && <Check size={16} strokeWidth={2.2} aria-hidden="true" className="menu-item-check" />}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
           <p className="menu-label" aria-hidden="true">
             Data
           </p>

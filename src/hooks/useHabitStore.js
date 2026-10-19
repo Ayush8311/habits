@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useReducer, useState } from 'react';
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { appReducer } from '../data/appReducer.js';
 import { habitRepository } from '../data/repository.js';
 import { createDefaultState, loadInitialState } from '../data/defaultHabits.js';
 import { getTodayKey } from '../lib/dates.js';
@@ -12,48 +13,16 @@ import {
   normalizeHex,
 } from '../lib/habitOptions.js';
 import { createId } from '../lib/ids.js';
+import { normalizeSchedule } from '../lib/schedule.js';
+import { normaliseTaskFields } from '../lib/tasks.js';
 
-const EMPTY_STATE = { habits: [], completions: {} };
-
-function reducer(state, action) {
-  switch (action.type) {
-    case 'toggle': {
-      const { habitId, dateKey } = action;
-      if (!state.habits.some((habit) => habit.id === habitId)) return state;
-      const record = { ...state.completions[habitId] };
-      if (record[dateKey]) delete record[dateKey];
-      else record[dateKey] = true;
-      return { ...state, completions: { ...state.completions, [habitId]: record } };
-    }
-    case 'add':
-      return {
-        habits: [...state.habits, action.habit],
-        completions: { ...state.completions, [action.habit.id]: {} },
-      };
-    case 'update':
-      return {
-        ...state,
-        habits: state.habits.map((habit) => (habit.id === action.id ? { ...habit, ...action.fields } : habit)),
-      };
-    case 'delete': {
-      const { [action.id]: _removed, ...completions } = state.completions;
-      return { habits: state.habits.filter((habit) => habit.id !== action.id), completions };
-    }
-    case 'clear':
-      return { ...state, completions: Object.fromEntries(state.habits.map((habit) => [habit.id, {}])) };
-    case 'replace':
-      return action.state;
-    default:
-      return state;
-  }
-}
-
-function normaliseFields({ name, icon, emoji, color }) {
+function normaliseFields({ name, icon, emoji, color, schedule }) {
   return {
     name: name.trim().slice(0, MAX_NAME_LENGTH),
     icon: isHabitIcon(icon) ? icon : DEFAULT_ICON,
     emoji: isEmoji(emoji) ? emoji : null,
     color: isPresetColor(color) ? color : (normalizeHex(color) ?? DEFAULT_COLOR),
+    schedule: normalizeSchedule(schedule),
   };
 }
 
@@ -63,11 +32,18 @@ function normaliseFields({ name, icon, emoji, color }) {
  * never touches components.
  */
 export function useHabitStore(repository = habitRepository) {
-  const [state, dispatch] = useReducer(reducer, repository, (repo) => loadInitialState(repo, getTodayKey()));
+  const [state, dispatch] = useReducer(appReducer, repository, (repo) => loadInitialState(repo, getTodayKey()));
   const [saveFailed, setSaveFailed] = useState(false);
 
+  // Saving after each change. The flag only updates when it actually changes, so a
+  // normal save doesn't cause a second render of the whole app.
+  const saveFailedRef = useRef(false);
   useEffect(() => {
-    setSaveFailed(!repository.save(state));
+    const failed = !repository.save(state);
+    if (failed !== saveFailedRef.current) {
+      saveFailedRef.current = failed;
+      setSaveFailed(failed);
+    }
   }, [state, repository]);
 
   useEffect(() => repository.subscribe((next) => dispatch({ type: 'replace', state: next })), [repository]);
@@ -90,15 +66,53 @@ export function useHabitStore(repository = habitRepository) {
       clearCompletions() {
         dispatch({ type: 'clear' });
       },
+      // Reset and delete-all replace habits and check-ins; tasks and the theme stay.
       resetToDefaults() {
-        dispatch({ type: 'replace', state: createDefaultState(getTodayKey()) });
+        const { habits, completions } = createDefaultState(getTodayKey());
+        dispatch({ type: 'replaceHabits', habits, completions });
       },
       deleteEverything() {
-        dispatch({ type: 'replace', state: EMPTY_STATE });
+        dispatch({ type: 'replaceHabits', habits: [], completions: {} });
       },
-      /** `next` must already be validated (see parseState). */
-      replaceState(next) {
-        dispatch({ type: 'replace', state: next });
+      /** `backup` comes from readBackup/parseBackup, so it is already validated. */
+      restoreBackup(backup) {
+        dispatch({ type: 'restore', backup });
+      },
+
+      // Tasks never touch habits or check-ins. `id` is created when a form opens,
+      // so submitting twice dispatches the same task and the second is ignored.
+      addTask(id, fields) {
+        dispatch({ type: 'addTask', task: { id, ...normaliseTaskFields(fields), completedAt: null, createdAt: Date.now() } });
+      },
+      updateTask(id, fields) {
+        dispatch({ type: 'updateTask', id, fields });
+      },
+      setTaskCompleted(id, completed) {
+        dispatch({ type: 'setTaskCompleted', id, completed, at: Date.now() });
+      },
+      deleteTask(id) {
+        dispatch({ type: 'deleteTask', id });
+      },
+      /** `ids` in their new order; habits not listed keep their places. */
+      reorderHabits(ids) {
+        dispatch({ type: 'reorderHabits', ids });
+      },
+      /** `ids` in their new order; tasks not listed (e.g. completed ones) keep their places. */
+      reorderTasks(ids) {
+        dispatch({ type: 'reorderTasks', ids });
+      },
+
+      setTheme(theme) {
+        dispatch({ type: 'setTheme', theme });
+      },
+      setPageLayout(layout) {
+        dispatch({ type: 'setPageLayout', layout });
+      },
+      setCombinedOrder(order) {
+        dispatch({ type: 'setCombinedOrder', order });
+      },
+      setOpeningPage(page) {
+        dispatch({ type: 'setOpeningPage', page });
       },
     }),
     [],

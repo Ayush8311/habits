@@ -43,7 +43,7 @@
 }
 .week-day.is-today .week-day-number {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
   font-weight: 600;
 }
 

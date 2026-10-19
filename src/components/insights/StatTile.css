@@ -58,8 +58,8 @@
   color: var(--color-accent-text);
 }
 .stat-trend-down {
-  background: #f6eee3;
-  color: #8f6227;
+  background: var(--color-warm-soft);
+  color: var(--color-warm-text);
 }
 .stat-trend-flat {
   background: var(--color-fill);

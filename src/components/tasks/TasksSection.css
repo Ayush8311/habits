@@ -1,0 +1,15 @@
+.tasks-section {
+  min-width: 0;
+}
+.tasks-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.tasks-section .m-section:first-of-type {
+  margin-top: var(--space-3);
+}
+.tasks-section .m-section {
+  margin-top: var(--space-5);
+}

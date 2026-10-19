@@ -10,7 +10,7 @@
   width: 52px;
   height: 52px;
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(29, 29, 31, 0.12);
+  box-shadow: var(--color-control-shadow);
 }
 .install-card-text {
   flex: 1;

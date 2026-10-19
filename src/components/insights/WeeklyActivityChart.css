@@ -26,3 +26,13 @@
   font-weight: 500;
   color: var(--color-text-secondary);
 }
+
+/* One cheap opacity fade (compositor only) instead of per-frame chart animation. */
+.activity-chart {
+  animation: activity-chart-in 240ms var(--ease-out);
+}
+@keyframes activity-chart-in {
+  from {
+    opacity: 0;
+  }
+}

@@ -16,7 +16,15 @@ import {
   isSameMonth,
   shiftMonth,
 } from '../../lib/dates.js';
-import { countCompletedOn, countTrackedOn, eligibleKeys, getHabitProgress, getHabitStreaks } from '../../lib/stats.js';
+import {
+  countApplicableOn,
+  countCompletedOn,
+  eligibleKeys,
+  getHabitProgress,
+  getHabitStreaks,
+  getTrackingStart,
+  isApplicable,
+} from '../../lib/stats.js';
 import { HabitCheckRow } from '../HabitCheckRow.jsx';
 import { MonthHeatmap } from '../MonthHeatmap.jsx';
 import { ScreenHeader } from '../ScreenHeader.jsx';
@@ -31,7 +39,7 @@ function DayDetail({ store, dateKey, todayKey }) {
   const { habits, completions } = store.state;
   const future = dateKey > todayKey;
   const done = countCompletedOn(habits, completions, dateKey);
-  const tracked = countTrackedOn(habits, completions, dateKey);
+  const tracked = countApplicableOn(habits, completions, dateKey);
 
   return (
     <section className="m-section" aria-labelledby="day-detail-title" aria-live="polite">
@@ -44,16 +52,22 @@ function DayDetail({ store, dateKey, todayKey }) {
       <ul className="m-card check-list">
         {habits.map((habit) => {
           const isDone = completions[habit.id]?.[dateKey] === true;
+          const streak = getHabitStreaks(habit, completions, todayKey);
+          const expected = isApplicable(habit, completions, dateKey);
+          const start = getTrackingStart(habit, completions);
+          const why = start && dateKey < start ? 'Before this habit started' : 'Not scheduled';
           return (
             <HabitCheckRow
               key={habit.id}
               habit={habit}
               done={isDone}
               disabled={future}
+              unscheduled={!expected && !future}
               dateLabel={formatFullDate(dateKey)}
-              streak={getHabitStreaks(habit.id, completions, todayKey)}
-              metaText={future ? 'Upcoming' : isDone ? 'Completed' : 'Not completed'}
-              onToggle={() => store.toggleCompletion(habit.id, dateKey)}
+              streakCurrent={streak.current}
+              streakBest={streak.best}
+              metaText={future ? 'Upcoming' : expected ? (isDone ? 'Completed' : 'Not completed') : isDone ? `Completed · ${why.toLowerCase()}` : why}
+              onToggle={(id) => store.toggleCompletion(id, dateKey)}
             />
           );
         })}
@@ -89,7 +103,7 @@ export function CalendarScreen({
           habit.id,
           {
             progress: getHabitProgress(habit, completions, monthKeys),
-            streak: getHabitStreaks(habit.id, completions, todayKey),
+            streak: getHabitStreaks(habit, completions, todayKey),
           },
         ]),
       ),

@@ -9,7 +9,7 @@ function BrandMark() {
   return <img className="brand-mark" src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" width="32" height="32" />;
 }
 
-export function Header({ todayKey, onAddHabit, settingsActions, summary, installFlow }) {
+export function Header({ todayKey, onAddHabit, settingsActions, summary, installFlow, theme, onThemeChange }) {
   const canOfferInstall = installFlow && installFlow.status !== 'installed' && installFlow.status !== 'just-installed';
   return (
     <header className="app-header">
@@ -29,7 +29,7 @@ export function Header({ todayKey, onAddHabit, settingsActions, summary, install
           New habit
         </Button>
         {canOfferInstall && <IconButton icon={Download} label="Install App" onClick={installFlow.install} />}
-        <SettingsMenu actions={settingsActions} summary={summary} />
+        <SettingsMenu actions={settingsActions} summary={summary} theme={theme} onThemeChange={onThemeChange} />
       </div>
     </header>
   );

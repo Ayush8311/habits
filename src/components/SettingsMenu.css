@@ -85,3 +85,15 @@
     transform: scale(0.96) translateY(-4px);
   }
 }
+
+.menu-item.menu-item-radio {
+  align-items: center;
+}
+.menu-item-check {
+  margin-left: auto;
+  color: var(--color-accent);
+}
+.menu-item-radio + .menu-label,
+div[role='group'] + .menu-label {
+  margin-top: var(--space-2);
+}

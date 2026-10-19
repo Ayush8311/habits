@@ -4,12 +4,26 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
+      content="width=device-width, initial-scale=1.0, minimum-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content"
     />
     <meta name="description" content="A calm, personal habit tracker: check in daily, keep streaks and see your progress." />
     <meta name="application-name" content="Habit" />
     <meta name="theme-color" content="#4A9466" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Sets the chosen appearance before the first paint (src/lib/theme.js keeps it current). -->
+    <script>
+      (function () {
+        var theme = 'light';
+        try {
+          var choice = localStorage.getItem('habit.theme');
+          var dark = choice === 'dark' || (choice === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+          theme = dark ? 'dark' : 'light';
+        } catch (error) {}
+        var root = document.documentElement;
+        root.dataset.theme = theme;
+        root.style.colorScheme = theme;
+      })();
+    </script>
 
     <!-- Home Screen web app on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes" />

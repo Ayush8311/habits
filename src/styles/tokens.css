@@ -35,10 +35,38 @@
   --color-accent-ring: rgba(74, 148, 102, 0.42);
   --color-accent-text: #2f6b45;
 
+  --color-on-accent: #ffffff;
+
   --color-warm: #c0843a;
+  --color-warm-soft: #f6eee3;
+  --color-warm-text: #8f6227;
+  --color-warning-bg: #f8efe2;
+  --color-warning-text: #7c5420;
   --color-danger: #c2463a;
   --color-danger-hover: #ab3a2f;
   --color-danger-soft: #fbeeec;
+  --color-danger-ring: rgba(194, 70, 58, 0.35);
+  --color-danger-ring-soft: rgba(194, 70, 58, 0.18);
+
+  /* Task priority: understated, distinguished by label first and colour second. */
+  --priority-low: #416a7b;
+  --priority-low-soft: #edf3f5;
+  --priority-medium: #855c14;
+  --priority-medium-soft: #f8f0e1;
+  --priority-high: #b0493a;
+  --priority-high-soft: #f9ebe8;
+
+  --color-backdrop: rgba(29, 29, 31, 0.26);
+  --color-scrim-edge: rgba(29, 29, 31, 0.06);
+  --color-control-shadow: 0 1px 2px rgba(29, 29, 31, 0.1), 0 0 0 0.5px rgba(29, 29, 31, 0.06);
+  --color-segment-thumb: #ffffff;
+  --color-accent-shadow: 0 2px 8px -2px rgba(74, 148, 102, 0.5);
+  /* Chart (passed to SVG as values by chartTheme.js) */
+  --chart-bar: #9fcbac;
+  --chart-track: #f2f1ec;
+  --chart-grid: rgba(29, 29, 31, 0.06);
+  --chart-tick: #8e8e93;
+  --chart-cursor: rgba(29, 29, 31, 0.035);
 
   /* 8-point spacing */
   --space-1: 4px;
@@ -62,6 +90,7 @@
   --shadow-card: 0 1px 2px rgba(29, 29, 31, 0.04), 0 6px 20px -12px rgba(29, 29, 31, 0.1);
   --shadow-raised: 0 2px 6px rgba(29, 29, 31, 0.05), 0 16px 40px -16px rgba(29, 29, 31, 0.2);
   --shadow-modal: 0 2px 8px rgba(29, 29, 31, 0.06), 0 32px 80px -24px rgba(29, 29, 31, 0.32);
+  --shadow-sheet: 0 -1px 10px rgba(29, 29, 31, 0.1);
   --focus-ring: 0 0 0 3px var(--color-accent-ring);
 
   /* Motion */
@@ -80,4 +109,77 @@
   :root {
     --habit-col: 148px;
   }
+}
+
+/* ── Dark appearance ──────────────────────────────────────────────────────────
+   Charcoal surfaces with a faint green warmth, soft-white text and the same
+   forest-green accent, so buttons keep their contrast in both themes. Applied
+   from <html data-theme="dark"> (see src/lib/theme.js and index.html). */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #161816;
+  --color-surface: #1f2220;
+  --color-surface-muted: #1b1d1b;
+  --color-fill: #2a2d2a;
+  --color-fill-strong: #343834;
+  --color-weekend: rgba(255, 255, 255, 0.025);
+
+  --color-text: #ecebe6;
+  --color-text-secondary: #a3a6a0;
+  --color-text-tertiary: #7d817a;
+
+  --color-border: rgba(255, 255, 255, 0.075);
+  --color-border-strong: rgba(255, 255, 255, 0.13);
+
+  --color-accent: #4a9466;
+  --color-accent-hover: #55a172;
+  --color-accent-pressed: #3f855a;
+  --color-accent-soft: #22382a;
+  --color-accent-tint: rgba(90, 168, 119, 0.08);
+  --color-accent-ring: rgba(110, 186, 137, 0.5);
+  --color-accent-text: #8fcca3;
+
+  --color-warm: #d29a52;
+  --color-warm-soft: #3a2f22;
+  --color-warm-text: #e2b77c;
+  --color-warning-bg: #3a2f22;
+  --color-warning-text: #e8c48f;
+  --color-danger: #e2766a;
+  --color-danger-hover: #ea887d;
+  --color-danger-soft: #3b2522;
+  --color-danger-ring: rgba(226, 118, 106, 0.4);
+  --color-danger-ring-soft: rgba(226, 118, 106, 0.22);
+
+  --priority-low: #8fb6c6;
+  --priority-low-soft: #1f2c31;
+  --priority-medium: #dcb06a;
+  --priority-medium-soft: #332a1c;
+  --priority-high: #ec8f80;
+  --priority-high-soft: #3a2421;
+
+  --color-backdrop: rgba(0, 0, 0, 0.5);
+  --color-scrim-edge: rgba(0, 0, 0, 0.3);
+  --color-control-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 0 0 0.5px rgba(255, 255, 255, 0.06);
+  --color-segment-thumb: #3b3f3b;
+  --color-accent-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.6);
+
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28), 0 6px 20px -12px rgba(0, 0, 0, 0.5);
+  --shadow-raised: 0 2px 6px rgba(0, 0, 0, 0.3), 0 16px 40px -16px rgba(0, 0, 0, 0.6);
+  --shadow-modal: 0 2px 8px rgba(0, 0, 0, 0.35), 0 32px 80px -24px rgba(0, 0, 0, 0.7);
+  --shadow-sheet: 0 -1px 10px rgba(0, 0, 0, 0.35);
+
+  --chart-bar: #3f6b4e;
+  --chart-track: #262926;
+  --chart-grid: rgba(255, 255, 255, 0.06);
+  --chart-tick: #8a8e87;
+  --chart-cursor: rgba(255, 255, 255, 0.04);
+}
+
+/* A habit's own colour is given inline as a palette computed for light
+   backgrounds. On dark surfaces its pale tint would glare, so the tint and icon
+   ink are re-derived from the same colour (inline styles need !important here). */
+:root[data-theme='dark'] [style*='--habit-soft'] {
+  --habit-soft: color-mix(in srgb, var(--habit-color) 24%, #1f2220) !important;
+  --habit-ink: color-mix(in srgb, var(--habit-color) 55%, #f4f3ee) !important;
 }

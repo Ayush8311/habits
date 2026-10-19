@@ -8,13 +8,13 @@
   border: 0;
   border-radius: 8px;
   background: var(--color-fill);
-  color: #fff;
+  color: var(--color-on-accent);
   cursor: pointer;
   vertical-align: middle;
   transition:
-    background-color var(--duration) var(--ease-out),
-    box-shadow var(--duration) var(--ease-out),
-    transform var(--duration-fast) var(--ease-out);
+    background-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out),
+    transform 160ms var(--ease-out);
 }
 .check-lg {
   --size: 32px;
@@ -68,10 +68,10 @@
   width: 64%;
   height: 64%;
   opacity: 0;
-  transform: scale(0.6);
+  transform: scale(0.82);
   transition:
-    opacity var(--duration-fast) var(--ease-out),
-    transform var(--duration) var(--ease-spring);
+    opacity 140ms var(--ease-out),
+    transform 200ms var(--ease-out);
 }
 .check-mark path {
   fill: none;
@@ -80,36 +80,19 @@
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-dasharray: 1;
-  stroke-dashoffset: 0;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 200ms var(--ease-out);
 }
+/* Completing draws the tick; undoing reverses the same transitions. Transitions
+   (not one-off keyframes) can be interrupted mid-way by a quick second tap, and
+   never run on first render, so already-done items appear without animating. */
 .check.is-done .check-mark {
   opacity: 1;
-  transform: scale(1);
+  transform: none;
 }
-
-/* Only played on the tap that completes the habit, never on first render. */
-.check.is-animating.is-done {
-  animation: check-pop 240ms var(--ease-out);
-}
-.check.is-animating.is-done .check-mark path {
-  animation: check-draw 220ms 40ms var(--ease-out) both;
-}
-
-@keyframes check-pop {
-  0% {
-    transform: scale(0.86);
-  }
-  60% {
-    transform: scale(1.06);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-@keyframes check-draw {
-  from {
-    stroke-dashoffset: 1;
-  }
+.check.is-done .check-mark path {
+  stroke-dashoffset: 0;
+  transition-delay: 30ms;
 }
 
 @media (pointer: coarse) {

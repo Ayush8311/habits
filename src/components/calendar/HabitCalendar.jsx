@@ -43,7 +43,7 @@ export function HabitCalendar({
           habit.id,
           {
             progress: getHabitProgress(habit, completions, monthKeys),
-            streak: getHabitStreaks(habit.id, completions, todayKey),
+            streak: getHabitStreaks(habit, completions, todayKey),
           },
         ]),
       ),

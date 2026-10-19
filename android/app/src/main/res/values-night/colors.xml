@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- In system dark mode the launch screen and window behind the page are charcoal
+         (Habit's dark background), matching the app when Appearance is System or Dark. -->
+    <color name="habit_background">#161816</color>
+</resources>

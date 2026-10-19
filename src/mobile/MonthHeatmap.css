@@ -44,7 +44,7 @@
   transform: scale(0.92);
 }
 .heat-day.is-strong {
-  color: #fff;
+  color: var(--color-on-accent);
 }
 .heat-day.is-future {
   background: transparent;

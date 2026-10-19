@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { formatMonthName } from '../lib/dates.js';
 import { getHabitProgress, getHabitStreaks } from '../lib/stats.js';
 import { HabitFormModal } from './HabitFormModal.jsx';
@@ -16,9 +16,10 @@ export function useHabitDialogs({ store, todayKey, monthKeys, monthKey }) {
   const { habits, completions } = store.state;
   const [dialog, setDialog] = useState(null);
 
-  const close = () => setDialog(null);
-  const confirm = (options) => setDialog({ kind: 'confirm', ...options });
-  const openHabitForm = (habitId = null) => setDialog({ kind: 'habit', habitId });
+  // Stable references, so memoised rows that receive them don't re-render needlessly.
+  const close = useCallback(() => setDialog(null), []);
+  const confirm = useCallback((options) => setDialog({ kind: 'confirm', ...options }), []);
+  const openHabitForm = useCallback((habitId = null) => setDialog({ kind: 'habit', habitId }), []);
 
   const editingHabit =
     dialog?.kind === 'habit' && dialog.habitId ? habits.find((habit) => habit.id === dialog.habitId) : null;
@@ -43,7 +44,7 @@ export function useHabitDialogs({ store, todayKey, monthKeys, monthKey }) {
           stats={
             editingHabit && {
               progress: getHabitProgress(editingHabit, completions, monthKeys),
-              streak: getHabitStreaks(editingHabit.id, completions, todayKey),
+              streak: getHabitStreaks(editingHabit, completions, todayKey),
             }
           }
           existingNames={

@@ -1,0 +1,288 @@
+/* The task sheet: header stays put, everything else scrolls inside the sheet. */
+.task-sheet {
+  width: min(100%, 480px);
+}
+
+.task-sheet-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--color-border);
+}
+.task-sheet-title {
+  text-align: center;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.task-sheet-title:focus {
+  outline: none;
+}
+.task-sheet-save {
+  min-width: 64px;
+}
+
+.task-sheet-body {
+  position: relative;
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  scroll-padding: var(--space-3);
+}
+
+.task-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.task-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.task-label {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  padding: 0;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+.task-optional {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+}
+
+/* Priority: three understated text options, none selected by default. */
+.priority-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.priority-option {
+  --priority: var(--color-text-secondary);
+  --priority-soft: var(--color-fill);
+  min-height: 42px;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-md);
+  font-weight: 550;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+.priority-option:active {
+  transform: scale(0.97);
+}
+.priority-option.is-low {
+  --priority: var(--priority-low);
+  --priority-soft: var(--priority-low-soft);
+}
+.priority-option.is-medium {
+  --priority: var(--priority-medium);
+  --priority-soft: var(--priority-medium-soft);
+}
+.priority-option.is-high {
+  --priority: var(--priority-high);
+  --priority-soft: var(--priority-high-soft);
+}
+.priority-option.is-selected {
+  border-color: var(--priority);
+  background: var(--priority-soft);
+  color: var(--priority);
+  box-shadow: inset 0 0 0 0.5px var(--priority);
+  font-weight: 650;
+}
+.priority-option:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Add time: a quiet text control on the right. */
+.task-time-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: calc(-1 * var(--space-2)) 0;
+}
+.task-time-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-accent-text);
+  font-size: var(--text-md);
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.task-time-toggle:active {
+  background: var(--color-accent-soft);
+}
+.task-time-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.task-input {
+  display: block;
+  width: 100%;
+  min-height: 48px;
+  padding: 12px var(--space-4);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-muted);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 16px; /* 16px keeps iOS from zooming into the field */
+  line-height: 1.4;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    background-color var(--duration-fast) var(--ease-out);
+}
+.task-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+.task-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: var(--color-surface);
+  box-shadow: var(--focus-ring);
+}
+.task-input.has-error {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px var(--color-danger-ring-soft);
+}
+.task-notes {
+  resize: none;
+  min-height: 72px;
+  max-height: 160px;
+  field-sizing: content;
+}
+
+/* Due date / time: one area, one wheel at a time. */
+.task-due-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.task-due-head .task-label {
+  margin: 0;
+}
+.task-due-chips {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+.task-chip {
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 550;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.task-chip.is-active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+}
+.task-chip:focus-visible,
+.task-due-clear:focus-visible,
+.task-due-add:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+.task-due-clear {
+  flex: none;
+  min-height: 32px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+.task-due-add {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 52px;
+  padding: 0 var(--space-4);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--text-base);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.task-due-add svg {
+  color: var(--color-accent);
+}
+.task-due-add .task-optional {
+  margin-left: auto;
+}
+.task-due-add:active {
+  background: var(--color-fill);
+}
+
+.task-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-2);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.task-submit {
+  --btn-height: 50px;
+  width: 100%;
+  font-size: var(--text-base);
+}
+
+/* On phones the sheet fits its content, up to the space above the keyboard; the
+   date and time wheels share one height, so switching between them never jumps. */
+@media (max-width: 560px) {
+  .task-sheet {
+    max-height: calc(100dvh - max(var(--space-6), env(safe-area-inset-top)) - var(--keyboard-inset, 0px));
+  }
+  /* While typing: end the sheet at Task name (see keepFieldsVisible). */
+  .task-sheet.is-typing {
+    height: var(--typing-height);
+  }
+  .task-sheet-body {
+    padding: var(--space-4) var(--space-4) var(--space-4);
+  }
+}

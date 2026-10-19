@@ -68,7 +68,7 @@
 
 .btn-primary {
   background: var(--color-accent);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--color-accent-hover);
@@ -109,13 +109,13 @@
 
 .btn-danger {
   background: var(--color-danger);
-  color: #fff;
+  color: var(--color-on-accent);
 }
 .btn-danger:hover:not(:disabled) {
   background: var(--color-danger-hover);
 }
 .btn-danger:focus-visible {
-  box-shadow: 0 0 0 3px rgba(194, 70, 58, 0.35);
+  box-shadow: 0 0 0 3px var(--color-danger-ring);
 }
 
 .btn-danger-ghost {
@@ -153,8 +153,8 @@
 
 .icon-btn-primary {
   background: var(--color-accent);
-  color: #fff;
-  box-shadow: 0 2px 8px -2px rgba(74, 148, 102, 0.5);
+  color: var(--color-on-accent);
+  box-shadow: var(--color-accent-shadow);
 }
 .icon-btn-primary:hover:not(:disabled) {
   background: var(--color-accent-hover);

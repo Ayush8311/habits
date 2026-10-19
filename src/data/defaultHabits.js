@@ -22,8 +22,9 @@ export function createDefaultState(todayKey) {
     emoji: null,
     color,
     createdAt: todayKey,
+    schedule: null, // every day
   }));
-  return { habits, completions: Object.fromEntries(habits.map((habit) => [habit.id, {}])) };
+  return { habits, completions: Object.fromEntries(habits.map((habit) => [habit.id, {}])), tasks: [], preferences: {} };
 }
 
 /**

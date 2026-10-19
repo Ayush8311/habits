@@ -69,7 +69,7 @@ test('insights describe today truthfully and handle no habits', () => {
   assert.equal(empty.items.length, 0);
 });
 
-test('a habit only counts from when it was created, or its earliest back-filled day', () => {
+test('a habit only counts from its creation date; earlier back-filled check-ins never make it expected', () => {
   const keys = ['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04'];
   const fresh = { id: 'new', createdAt: '2026-10-03' };
   const old = { id: 'old', createdAt: '2026-09-01' };
@@ -78,13 +78,17 @@ test('a habit only counts from when it was created, or its earliest back-filled 
   assert.deepEqual(getHabitProgress(fresh, completions, keys), { done: 1, total: 2, rate: 0.5 });
   assert.deepEqual(getOverallProgress([fresh, old], completions, keys), { done: 3, total: 6, rate: 0.5 });
 
+  // Back-filling Oct 2 (before the habit existed) keeps the record but doesn't
+  // make Oct 2 an expected day, so rates and Perfect Days can't be inflated.
   const backfilled = { new: record('2026-10-02', '2026-10-03') };
-  assert.equal(getHabitProgress(fresh, backfilled, keys).total, 3);
+  assert.deepEqual(getHabitProgress(fresh, backfilled, keys), { done: 1, total: 2, rate: 0.5 });
 
   const series = getDailySeries([fresh, old], completions, keys.map((key) => ({ key })));
   assert.deepEqual(series.map((day) => day.total), [1, 1, 2, 2]);
   assert.equal(countPerfectDays([fresh, old], completions, keys), 2);
 
+  // Without a creation date (older data) a habit counts from its first check-in.
   const legacy = { id: 'legacy', createdAt: null };
   assert.equal(getHabitProgress(legacy, {}, keys).total, 4);
+  assert.equal(getHabitProgress(legacy, { legacy: record('2026-10-02') }, keys).total, 3);
 });

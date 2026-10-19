@@ -5,6 +5,13 @@
   overflow: hidden;
 }
 
+.check-row-item {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background: var(--color-surface);
+}
+
 .check-row-item + .check-row-item .check-row::before {
   content: '';
   position: absolute;
@@ -47,6 +54,12 @@
   opacity: 0.5;
 }
 
+/* Not expected today (weekly schedule): still checkable, just quieter. */
+.check-row.is-unscheduled:not(.is-done) .check-row-text,
+.check-row.is-unscheduled:not(.is-done) .habit-icon {
+  opacity: 0.55;
+}
+
 .check-row-text {
   display: flex;
   flex: 1;
@@ -86,7 +99,7 @@
   pointer-events: none;
 }
 .check-row:active:not(:disabled) .check-row-box {
-  transform: scale(0.9);
+  transform: scale(0.94);
 }
 
 .check-row-chevron {
@@ -98,4 +111,54 @@
 .check.check-row-box.is-done {
   background: var(--habit-color);
   color: var(--habit-on);
+}
+
+/* A changed label ("Not started yet" → "1-day streak") fades in instead of snapping. */
+.check-row-meta-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  animation: meta-in 180ms var(--ease-out);
+}
+@keyframes meta-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ── Reordering (Edit mode) ── */
+.reorder-handle {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 48px;
+  color: var(--color-text-tertiary);
+  cursor: grab;
+  touch-action: none; /* the handle drags; the rest of the row still scrolls the page */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.reorder-handle:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-accent-ring);
+  border-radius: var(--radius-md);
+}
+[data-reorder-id] {
+  transition: transform 180ms var(--ease-out);
+}
+.is-reordering [data-reorder-id] {
+  will-change: transform;
+}
+/* The lifted row: a subtle raise above its neighbours while it follows the finger. */
+[data-reorder-id].is-dragging {
+  z-index: 2;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  cursor: grabbing;
+}
+[data-reorder-id].is-dragging .reorder-handle {
+  color: var(--color-accent);
+}
+.is-reordering {
+  overflow: visible !important;
 }

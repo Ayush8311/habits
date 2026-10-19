@@ -16,12 +16,14 @@
   fill: none;
   stroke: var(--color-accent);
   stroke-linecap: round;
+  /* Same short curve as the check box, so tick and ring move together. */
   transition:
-    stroke-dashoffset 600ms var(--ease-out),
-    opacity var(--duration) var(--ease-out);
+    stroke-dashoffset 320ms var(--ease-out),
+    opacity 180ms var(--ease-out);
 }
 .ring-value {
   position: relative;
+  font-variant-numeric: tabular-nums;
   font-family: var(--font-rounded);
   font-size: var(--text-xl);
   font-weight: 600;

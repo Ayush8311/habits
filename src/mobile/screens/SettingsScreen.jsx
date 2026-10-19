@@ -1,20 +1,11 @@
-import {
-  ChevronRight,
-  CircleCheck,
-  Download,
-  Eraser,
-  HardDrive,
-  Plus,
-  RotateCcw,
-  Trash2,
-  Upload,
-} from 'lucide-react';
-import { HabitIcon } from '../../components/calendar/HabitIcon.jsx';
-import { countCheckIns } from '../../lib/backup.js';
-import { cx } from '../../lib/classNames.js';
+import { ChevronRight, Download, Eraser, HardDrive, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { InstallCard } from '../../components/install/InstallCard.jsx';
 import { useInstallFlow } from '../../components/install/useInstallFlow.jsx';
-import { usePWAState } from '../../pwa.js';
+import { SegmentedControl } from '../../components/ui/SegmentedControl.jsx';
+import { countCheckIns } from '../../lib/backup.js';
+import { cx } from '../../lib/classNames.js';
+import { isNativeApp } from '../../lib/platform.js';
+import { getCombinedOrder, getOpeningPage, getPageLayout, getTheme } from '../../lib/preferences.js';
 import { ScreenHeader } from '../ScreenHeader.jsx';
 import './SettingsScreen.css';
 
@@ -65,63 +56,117 @@ function Group({ title, footer, children }) {
   );
 }
 
+const THEME_OPTIONS = [
+  { value: 'light', label: 'Light' },
+  { value: 'dark', label: 'Dark' },
+  { value: 'system', label: 'System' },
+];
+
+/** Only offered while Habit isn't installed; once installed there is nothing to show. */
 function InstallGroup() {
   const flow = useInstallFlow();
-  const { offlineReady } = usePWAState();
+  const installed = flow.status === 'installed' || flow.status === 'just-installed';
+  if (isNativeApp || (installed && !flow.dialog)) return null;
 
   return (
     <section className="m-section">
       <h2 className="m-section-title">App</h2>
-      <div className="m-card">
-        <InstallCard flow={flow} />
-      </div>
-      <ul className="m-card settings-group settings-group-spaced">
-        <Row
-          icon={CircleCheck}
-          label={offlineReady ? 'Works offline' : 'Preparing offline mode'}
-          detail={offlineReady ? 'Habit is saved on this device' : 'Available after the first full load'}
-        />
-      </ul>
+      {!installed && (
+        <div className="m-card">
+          <InstallCard flow={flow} />
+        </div>
+      )}
       {flow.dialog}
     </section>
   );
 }
 
-export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit }) {
-  const { habits } = store.state;
+const LAYOUT_OPTIONS = [
+  { value: 'separate', label: 'Separate pages' },
+  { value: 'combined', label: 'Combined page' },
+];
+const LAYOUT_HINTS = {
+  separate: 'Tasks and habits on their own pages.',
+  combined: 'Tasks and habits together on one page. No separate Tasks page.',
+};
+const ORDER_OPTIONS = [
+  { value: 'tasks-first', label: 'Tasks first' },
+  { value: 'habits-first', label: 'Habits first' },
+];
+const OPENING_OPTIONS = [
+  { value: 'tasks', label: 'Tasks' },
+  { value: 'today', label: 'Habits' },
+];
+
+function AppearanceGroup({ store }) {
+  const { preferences } = store.state;
+  const theme = getTheme(preferences);
+  const layout = getPageLayout(preferences);
+  const order = getCombinedOrder(preferences);
+  const opening = getOpeningPage(preferences);
+  return (
+    <section className="m-section">
+      <h2 className="m-section-title" id="appearance-title">
+        Appearance
+      </h2>
+      <div className="m-card settings-appearance">
+        <SegmentedControl options={THEME_OPTIONS} value={theme} onChange={store.setTheme} label="Appearance" />
+        <p className="settings-appearance-hint">
+          {theme === 'system' ? 'Follows your device’s light or dark setting.' : `Always ${theme}.`}
+        </p>
+      </div>
+      <h2 className="m-section-title settings-subtitle" id="layout-title">
+        Page layout
+      </h2>
+      <div className="m-card settings-appearance">
+        <SegmentedControl options={LAYOUT_OPTIONS} value={layout} onChange={store.setPageLayout} label="Page layout" />
+        <p className="settings-appearance-hint">{LAYOUT_HINTS[layout]}</p>
+        {layout === 'combined' ? (
+          <div className="settings-subsetting">
+            <p className="settings-subsetting-label" id="combined-order-label">
+              Combined page order
+            </p>
+            <SegmentedControl options={ORDER_OPTIONS} value={order} onChange={store.setCombinedOrder} label="Combined page order" />
+            <p className="settings-appearance-hint">Which section comes first on the combined page.</p>
+          </div>
+        ) : (
+          <div className="settings-subsetting">
+            <p className="settings-subsetting-label" id="opening-page-label">
+              Opening page
+            </p>
+            <SegmentedControl options={OPENING_OPTIONS} value={opening} onChange={store.setOpeningPage} label="Opening page" />
+            <p className="settings-appearance-hint">The page Habit opens on next time.</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function SettingsScreen({ store, confirm, backup }) {
+  const { habits, tasks } = store.state;
   const checkIns = countCheckIns(store.state);
 
   return (
     <div className="settings-screen">
       <ScreenHeader title="Settings" />
 
-      <InstallGroup />
+      <AppearanceGroup store={store} />
 
-      <Group title="Habits">
-        {habits.map((habit) => (
-          <Row
-            key={habit.id}
-            leading={<HabitIcon icon={habit.icon} emoji={habit.emoji} color={habit.color} />}
-            label={habit.name}
-            chevron
-            onClick={() => onEditHabit(habit.id)}
-          />
-        ))}
-        <Row icon={Plus} label="Add habit" tone="accent" onClick={onAddHabit} />
-      </Group>
+      <InstallGroup />
 
 
       <Group
         title="Data"
         footer={
           backup.status ??
-          'Your habits are stored only on this device. To move them to another device, export a backup here and import it there.'
+          'Your habits and tasks are stored only on this device. To move them to another device, export a backup here and import it there.'
         }
       >
         <Row
           icon={HardDrive}
           label="Stored on this device"
-          detail={`${plural(habits.length, 'habit')} · ${plural(checkIns, 'check-in')}`}
+          detail={`${plural(habits.length, 'habit')} · ${plural(checkIns, 'check-in')} · ${plural(tasks.length, 'task')}`}
         />
         <Row icon={Download} label="Export backup" detail="Save a copy as a file" onClick={backup.exportData} />
         <Row icon={Upload} label="Import backup" detail="Replace data from a backup file" onClick={backup.chooseFile} />
@@ -134,7 +179,7 @@ export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit
           onClick={() =>
             confirm({
               title: 'Reset to default habits?',
-              message: 'Your habits and check-ins will be replaced with the default habits, with no check-ins.',
+              message: 'Your habits and check-ins will be replaced with the default habits, with no check-ins. Your tasks stay.',
               confirmLabel: 'Reset',
               onConfirm: store.resetToDefaults,
             })
@@ -160,7 +205,7 @@ export function SettingsScreen({ store, confirm, backup, onAddHabit, onEditHabit
           onClick={() =>
             confirm({
               title: 'Delete all habits?',
-              message: `${plural(habits.length, 'habit')} and ${plural(checkIns, 'check-in')} will be removed so you can start fresh. This can’t be undone.`,
+              message: `${plural(habits.length, 'habit')} and ${plural(checkIns, 'check-in')} will be removed so you can start fresh. Your tasks stay. This can’t be undone.`,
               confirmLabel: 'Delete everything',
               onConfirm: store.deleteEverything,
             })

@@ -1,7 +1,11 @@
 .m-app {
   --nav-height: 56px;
+  --add-bar-height: 62px;
   --screen-gutter: max(var(--space-4), env(safe-area-inset-left));
   min-height: 100dvh;
+  /* Nothing may make the page wider than the screen: on Android that makes the
+     WebView zoom the whole page out, which moved the tab bar. */
+  overflow-x: clip;
 }
 
 .m-screen {
@@ -10,15 +14,16 @@
   padding: max(var(--space-3), env(safe-area-inset-top)) var(--screen-gutter)
     calc(var(--nav-height) + env(safe-area-inset-bottom) + var(--space-6));
   padding-right: max(var(--space-4), env(safe-area-inset-right));
-  animation: m-screen-in var(--duration-slow) var(--ease-out);
 }
 
-@keyframes m-screen-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+/* Room for the Today action bar, so the last habit can scroll clear of it. */
+.m-screen.has-add-bar {
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom) + var(--add-bar-height) + var(--space-3) + var(--space-6));
 }
+html:has(.has-add-bar) {
+  scroll-padding-bottom: calc(56px + env(safe-area-inset-bottom) + 62px + var(--space-3) + var(--space-4));
+}
+
 
 .m-banners {
   position: sticky;
@@ -28,9 +33,9 @@
   flex-direction: column;
   gap: var(--space-1);
   padding: max(var(--space-2), env(safe-area-inset-top)) var(--space-4) var(--space-2);
-  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
-  -webkit-backdrop-filter: blur(16px);
-  backdrop-filter: blur(16px);
+  /* Near-opaque instead of a live blur: the blur had to be redrawn by the GPU every
+     frame while anything behind it moved. */
+  background: color-mix(in srgb, var(--color-bg) 97%, transparent);
 }
 .m-banners + .m-screen {
   padding-top: var(--space-2);
@@ -51,8 +56,8 @@
   font-weight: 500;
 }
 .m-banner-warning {
-  background: #f8efe2;
-  color: #7c5420;
+  background: var(--color-warning-bg);
+  color: var(--color-warning-text);
 }
 
 /* Shared mobile building blocks */

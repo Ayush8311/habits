@@ -37,14 +37,41 @@ export const HABIT_ICONS = [
 ];
 
 // Muted tones used for each habit's icon chip. Completion is always green.
+// These ids are stored in saved data: never rename or remove one, or change its value.
 export const HABIT_COLORS = [
   { id: 'sage', label: 'Sage', value: '#5B9A70' },
-  { id: 'ocean', label: 'Ocean', value: '#4F7EA8' },
-  { id: 'clay', label: 'Clay', value: '#BC7656' },
+  { id: 'ocean', label: 'Muted blue', value: '#4F7EA8' },
+  { id: 'clay', label: 'Terracotta', value: '#BC7656' },
   { id: 'amber', label: 'Amber', value: '#B58C3C' },
   { id: 'plum', label: 'Plum', value: '#8A6DA6' },
-  { id: 'rose', label: 'Rose', value: '#B46A7B' },
+  { id: 'rose', label: 'Dusty rose', value: '#B46A7B' },
   { id: 'slate', label: 'Slate', value: '#6B7480' },
+];
+
+// More coordinated swatches for the picker. They are saved as plain '#rrggbb'
+// values (like custom colours), which every version of the app already reads.
+export const EXTRA_SWATCHES = [
+  { label: 'Forest green', value: '#3f7a52' },
+  { label: 'Olive', value: '#7c8450' },
+  { label: 'Lavender', value: '#9384bd' },
+  { label: 'Stone', value: '#8a8379' },
+  { label: 'Charcoal', value: '#4f5258' },
+];
+
+/** Picker order: greens, warm tones, cool tones, then neutrals. `value` is what gets saved. */
+export const COLOR_SWATCHES = [
+  { value: 'sage', label: 'Sage' },
+  { value: '#3f7a52', label: 'Forest green' },
+  { value: '#7c8450', label: 'Olive' },
+  { value: 'amber', label: 'Amber' },
+  { value: 'clay', label: 'Terracotta' },
+  { value: 'rose', label: 'Dusty rose' },
+  { value: 'plum', label: 'Plum' },
+  { value: '#9384bd', label: 'Lavender' },
+  { value: 'ocean', label: 'Muted blue' },
+  { value: 'slate', label: 'Slate' },
+  { value: '#8a8379', label: 'Stone' },
+  { value: '#4f5258', label: 'Charcoal' },
 ];
 
 export const DEFAULT_ICON = 'leaf';

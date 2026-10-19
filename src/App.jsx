@@ -1,8 +1,10 @@
 import { UpdateToast } from './components/install/UpdateToast.jsx';
 import { DesktopApp } from './DesktopApp.jsx';
+import { useAppliedTheme } from './hooks/useAppliedTheme.js';
 import { useHabitStore } from './hooks/useHabitStore.js';
 import { MOBILE_QUERY, useMediaQuery } from './hooks/useMediaQuery.js';
 import { useToday } from './hooks/useToday.js';
+import { getTheme } from './lib/preferences.js';
 import { MobileApp } from './mobile/MobileApp.jsx';
 
 /**
@@ -13,6 +15,7 @@ export default function App() {
   const todayKey = useToday();
   const store = useHabitStore();
   const isMobile = useMediaQuery(MOBILE_QUERY);
+  useAppliedTheme(getTheme(store.state.preferences));
 
   return (
     <>

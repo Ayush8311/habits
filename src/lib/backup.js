@@ -3,7 +3,7 @@
 
 import { getTodayKey } from './dates.js';
 import { isNativeApp } from './platform.js';
-import { parseState, serializeState } from './storage.js';
+import { migrateState, serializeState } from './storage.js';
 
 /** Saves a backup through the share sheet on phones, or as a download elsewhere. */
 export async function exportBackup(state) {
@@ -49,10 +49,42 @@ async function exportNative(fileName, json) {
   }
 }
 
-/** Resolves to validated state, or null if the file isn't a Habit backup. */
+/**
+ * A backup's validated state plus which optional parts it actually contains, or
+ * null if the text isn't a Habit backup. Backups from before tasks or preferences
+ * existed simply lack those fields.
+ */
+export function parseBackup(text) {
+  let raw;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  const state = migrateState(raw);
+  if (!state) return null;
+  return { state, hasTasks: Array.isArray(raw.tasks), hasPreferences: Boolean(raw.preferences) && typeof raw.preferences === 'object' };
+}
+
+/** Resolves to a parsed backup (see parseBackup), or null if the file isn't a Habit backup. */
 export async function readBackup(file) {
   if (!file || file.size > 5 * 1024 * 1024) return null;
-  return parseState(await file.text());
+  return parseBackup(await file.text());
+}
+
+/**
+ * The state after restoring `backup` over `current`. Habits and check-ins come from
+ * the backup, as they always have. Tasks and preferences come from it only when it
+ * has them: restoring an older backup never deletes tasks or resets the theme.
+ */
+export function applyBackup(current, backup) {
+  const { state, hasTasks, hasPreferences } = backup;
+  return {
+    habits: state.habits,
+    completions: state.completions,
+    tasks: hasTasks ? state.tasks : (current.tasks ?? []),
+    preferences: hasPreferences ? { ...current.preferences, ...state.preferences } : (current.preferences ?? {}),
+  };
 }
 
 export const countCheckIns = (state) =>

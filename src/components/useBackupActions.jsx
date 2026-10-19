@@ -20,8 +20,8 @@ export function useBackupActions({ store, confirm }) {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    const next = await readBackup(file);
-    if (!next) {
+    const backup = await readBackup(file);
+    if (!backup) {
       confirm({
         title: 'That file can’t be imported',
         message: 'Choose a backup file exported from Habit.',
@@ -32,12 +32,17 @@ export function useBackupActions({ store, confirm }) {
       });
       return;
     }
+    const { state } = backup;
+    const contents = [plural(state.habits.length, 'habit'), plural(countCheckIns(state), 'check-in')];
+    if (backup.hasTasks) contents.push(plural(state.tasks.length, 'task'));
     confirm({
       title: 'Replace your data with this backup?',
-      message: `It contains ${plural(next.habits.length, 'habit')} and ${plural(countCheckIns(next), 'check-in')}, and replaces everything on this device.`,
+      message: backup.hasTasks
+        ? `It contains ${contents.slice(0, -1).join(', ')} and ${contents.at(-1)}, and replaces everything on this device.`
+        : `It contains ${contents.join(' and ')}, and replaces your habits and check-ins on this device. Your tasks stay as they are.`,
       confirmLabel: 'Replace',
       onConfirm: () => {
-        store.replaceState(next);
+        store.restoreBackup(backup);
         setStatus('Backup imported.');
       },
     });

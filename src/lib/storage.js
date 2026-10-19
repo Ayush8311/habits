@@ -5,8 +5,13 @@
 
 import { isDateKey } from './dates.js';
 import { DEFAULT_COLOR, DEFAULT_ICON, MAX_NAME_LENGTH, isEmoji, isHabitIcon, normalizeHex, isPresetColor } from './habitOptions.js';
+import { normalizeSchedule } from './schedule.js';
+import { sanitizeTasks } from './tasks.js';
+import { sanitizePreferences } from './preferences.js';
 
 export const STORAGE_KEY = 'habit.state.v1';
+// Still version 1: tasks, preferences and habit schedules are optional additions.
+// Data without them (older saves and backups) reads exactly as before.
 export const SCHEMA_VERSION = 1;
 
 function sanitizeHabit(raw) {
@@ -21,6 +26,8 @@ function sanitizeHabit(raw) {
     emoji: isEmoji(raw.emoji) ? raw.emoji : null,
     color: isPresetColor(raw.color) ? raw.color : (normalizeHex(raw.color) ?? DEFAULT_COLOR),
     createdAt: isDateKey(raw.createdAt) ? raw.createdAt : null,
+    // null means every day: habits saved before schedules existed keep that meaning.
+    schedule: normalizeSchedule(raw.schedule),
   };
 }
 
@@ -47,7 +54,7 @@ export function sanitizeState(input) {
     completions[habit.id] = record;
   }
 
-  return { habits, completions };
+  return { habits, completions, tasks: sanitizeTasks(input.tasks), preferences: sanitizePreferences(input.preferences) };
 }
 
 /**

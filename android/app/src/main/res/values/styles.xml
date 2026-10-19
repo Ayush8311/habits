@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- Habit is a light-only design, so the native theme stays light even in system dark mode;
-         this also stops the WebView from darkening the page automatically. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!-- DayNight, so the WebView reports the phone's light/dark setting to the page
+         (prefers-color-scheme). Habit's Settings → Appearance → System depends on it; with
+         the old Light-only theme the WebView always said "light". The page draws its own
+         dark theme, and the WebView's automatic darkening stays off (the default for apps
+         targeting Android 13+). -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
-    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar">
+    <style name="AppTheme.NoActionBar" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>

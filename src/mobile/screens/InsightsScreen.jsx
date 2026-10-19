@@ -20,15 +20,16 @@ import { buildInsights } from '../../lib/insights.js';
 import {
   countCompletedOn,
   countPerfectDays,
-  countTrackedOn,
   eligibleKeys,
+  getApplicableHabits,
+  getBestDay,
+  getBestWeek,
   getDailySeries,
   getHabitProgress,
   getHabitStreaks,
   getOverallProgress,
   getStreakLeaders,
   getWeekComparison,
-  getWeeklyRates,
   toPercent,
 } from '../../lib/stats.js';
 import { ScreenHeader } from '../ScreenHeader.jsx';
@@ -62,22 +63,13 @@ function useInsightsData(habits, completions, todayKey) {
       .map((habit) => ({
         habit,
         progress: getHabitProgress(habit, completions, monthKeys),
-        streak: getHabitStreaks(habit.id, completions, todayKey),
+        streak: getHabitStreaks(habit, completions, todayKey),
       }))
       .sort((a, b) => (b.progress.rate ?? 0) - (a.progress.rate ?? 0));
 
     // Personal bests, each only shown when there is real data behind it.
-    const bestWeek = getWeeklyRates(habits, completions, todayKey, 8)
-      .filter((entry) => entry.done > 0)
-      .reduce((best, entry) => (!best || entry.rate > best.rate ? entry : best), null);
-    const thirtyDays = getRecentDays(todayKey, 30).map((day) => day.key);
-    const bestDay = thirtyDays.reduce(
-      (best, key) => {
-        const done = countCompletedOn(habits, completions, key);
-        return done > best.done ? { key, done, total: countTrackedOn(habits, completions, key) } : best;
-      },
-      { key: null, done: 0, total: 0 },
-    );
+    const bestWeek = getBestWeek(habits, completions, todayKey, 8);
+    const bestDay = getBestDay(habits, completions, todayKey, 30);
 
     return {
       monthKeys,
@@ -87,7 +79,8 @@ function useInsightsData(habits, completions, todayKey) {
       chart,
       perHabit,
       todayDone: countCompletedOn(habits, completions, todayKey),
-      perfectDays: countPerfectDays(habits, completions, monthKeys),
+      todayDue: getApplicableHabits(habits, completions, todayKey).length,
+      perfectDays: countPerfectDays(habits, completions, monthKeys, todayKey),
       bestWeek,
       bestDay,
       insights: buildInsights({ habits, completions, todayKey, week, monthKeys }),
@@ -116,7 +109,7 @@ export function InsightsScreen({ store, todayKey }) {
     );
   }
 
-  const todayRate = data.todayDone / habits.length;
+  const todayRate = data.todayDue > 0 ? data.todayDone / data.todayDue : null;
   const bests = [
     leaders.best.habit && {
       label: 'Longest streak',
@@ -136,7 +129,7 @@ export function InsightsScreen({ store, todayKey }) {
     {
       label: `Perfect days in ${monthName}`,
       value: String(data.perfectDays),
-      detail: 'Every habit done',
+      detail: 'Every scheduled habit done',
     },
   ].filter(Boolean);
 
@@ -150,7 +143,7 @@ export function InsightsScreen({ store, todayKey }) {
           label="Today"
           value={toPercent(todayRate)}
           unit="%"
-          caption={`${data.todayDone} of ${habits.length} done`}
+          caption={data.todayDue > 0 ? `${data.todayDone} of ${data.todayDue} done` : 'Nothing scheduled'}
         />
         <StatTile
           icon={BarChart3}

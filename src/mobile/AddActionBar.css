@@ -1,0 +1,122 @@
+/* Docked above the tab bar, clear of the gesture area and screen edges. */
+.add-bar-dock {
+  position: fixed;
+  right: 0;
+  bottom: calc(var(--nav-height, 56px) + env(safe-area-inset-bottom) + var(--space-3));
+  left: 0;
+  z-index: 35;
+  display: flex;
+  justify-content: center;
+  padding: 0 max(var(--space-4), env(safe-area-inset-right)) 0 max(var(--space-4), env(safe-area-inset-left));
+  pointer-events: none;
+}
+
+.add-bar {
+  --swipe: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 560px;
+  height: var(--add-bar-height, 62px);
+  padding: 0 6px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  /* Opaque: a live backdrop blur here was redrawn by the GPU on every frame. */
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: pan-y; /* vertical pans stay with the page; sideways moves are ours */
+  -webkit-user-select: none;
+  user-select: none;
+}
+.add-bar:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-raised), var(--focus-ring);
+}
+
+.add-bar-hint {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding: 0 var(--space-4);
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* The knob slides over the track. Its own label fades as it nears either end,
+   while the masked copy below shows the label it is covering, in white. */
+.add-bar-knob {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  height: 50px;
+  margin: -25px 0 0;
+  padding: 0 var(--space-5) 0 var(--space-4);
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  box-shadow: var(--color-accent-shadow);
+  font-size: 16px;
+  font-weight: 650;
+  white-space: nowrap;
+  translate: -50% 0;
+  transition: transform 220ms var(--ease-out);
+  will-change: transform;
+}
+.add-bar-knob-label {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  opacity: calc(1 - max(var(--swipe), calc(var(--swipe) * -1)) * 1.6);
+}
+/* White copy of the track's labels, the size of the track, positioned so it lines
+   up with the real labels; it moves opposite to the knob (set in AddActionBar). */
+.add-bar-knob-mask {
+  position: absolute;
+  top: calc((var(--knob-h, 50px) - var(--bar-h, 60px)) / 2);
+  left: calc((var(--knob-w, 140px) - var(--bar-w, 340px)) / 2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: var(--bar-w, 340px);
+  height: var(--bar-h, 60px);
+  padding: 0 6px;
+  color: var(--color-on-accent);
+  transition: transform 220ms var(--ease-out);
+  pointer-events: none;
+}
+.add-bar:active:not(.is-dragging) .add-bar-knob {
+  scale: 0.97;
+}
+.add-bar.is-dragging .add-bar-knob {
+  background: var(--color-accent-pressed);
+}
+
+@media (max-width: 340px) {
+  .add-bar-hint {
+    padding: 0 var(--space-3);
+    font-size: var(--text-md);
+  }
+  .add-bar-knob {
+    padding: 0 var(--space-4) 0 var(--space-3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .add-bar-knob,
+  .add-bar-knob-mask {
+    transition: none;
+  }
+}

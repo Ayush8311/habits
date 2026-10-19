@@ -1,19 +1,11 @@
 import { Suspense, lazy, useId, useState } from 'react';
 import { Smile, Trash2 } from 'lucide-react';
 import { cx } from '../lib/classNames.js';
-import {
-  DEFAULT_COLOR,
-  DEFAULT_ICON,
-  HABIT_COLORS,
-  HABIT_ICONS,
-  MAX_NAME_LENGTH,
-  getHabitColor,
-  habitColorStyle,
-  isCustomColor,
-  normalizeHex,
-} from '../lib/habitOptions.js';
+import { DEFAULT_COLOR, DEFAULT_ICON, HABIT_ICONS, MAX_NAME_LENGTH, habitColorStyle } from '../lib/habitOptions.js';
+import { WEEKDAYS, describeFrequency, describeSchedule, normalizeSchedule, scheduleDays } from '../lib/schedule.js';
 import { toPercent } from '../lib/stats.js';
 import { HabitIcon } from './calendar/HabitIcon.jsx';
+import { ColorPicker } from './ColorPicker.jsx';
 import { Button } from './ui/Button.jsx';
 import { Modal } from './ui/Modal.jsx';
 import './HabitFormModal.css';
@@ -52,14 +44,14 @@ function HabitStats({ stats, monthName }) {
 }
 
 /** Mirrors a Today-screen row so changes can be judged before saving. */
-function HabitPreview({ name, icon, emoji, color }) {
+function HabitPreview({ name, icon, emoji, color, schedule }) {
   const trimmed = name.trim();
   return (
     <div className="habit-preview" style={habitColorStyle(color)} aria-hidden="true">
       <HabitIcon icon={icon} emoji={emoji} color={color} size="lg" />
       <span className="habit-preview-text">
         <span className={cx('habit-preview-name', !trimmed && 'is-placeholder')}>{trimmed || 'Habit name'}</span>
-        <span className="habit-preview-meta">Preview</span>
+        <span className="habit-preview-meta">{describeSchedule(schedule)}</span>
       </span>
       <span className="check check-row-box habit-preview-check is-done">
         <svg className="check-mark" viewBox="0 0 16 16">
@@ -67,36 +59,6 @@ function HabitPreview({ name, icon, emoji, color }) {
         </svg>
       </span>
     </div>
-  );
-}
-
-/**
- * The multicolour circle *is* the native colour input (transparent, layered on
- * top), so one tap opens the system picker directly on iOS, Android and desktop.
- * Cancelling the picker fires no change, so the previous colour stays.
- */
-function CustomColorField({ color, onChange }) {
-  const isCustom = isCustomColor(color);
-  const current = getHabitColor(color);
-
-  return (
-    <span
-      className={cx('custom-color', isCustom && 'is-selected')}
-      style={isCustom ? { '--swatch': current } : undefined}
-      title="Custom color"
-    >
-      <span className="custom-color-wheel" aria-hidden="true" />
-      <input
-        type="color"
-        className="custom-color-input"
-        value={current}
-        aria-label={isCustom ? `Choose custom color, currently ${current}` : 'Choose custom color'}
-        onChange={(event) => {
-          const hex = normalizeHex(event.target.value);
-          if (hex) onChange(hex);
-        }}
-      />
-    </span>
   );
 }
 
@@ -109,7 +71,11 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
   const [icon, setIcon] = useState(habit?.icon ?? DEFAULT_ICON);
   const [emoji, setEmoji] = useState(habit?.emoji ?? null);
   const [color, setColor] = useState(habit?.color ?? DEFAULT_COLOR);
+  // Every day unless the user changes it; a habit saved without a schedule shows all seven.
+  const [days, setDays] = useState(() => scheduleDays(habit?.schedule ?? null));
   const [error, setError] = useState(null);
+  const [scheduleError, setScheduleError] = useState(false);
+  const scheduleHintId = useId();
   const [pickingEmoji, setPickingEmoji] = useState(false);
 
   return (
@@ -149,11 +115,16 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
               event.currentTarget.querySelector(`#${CSS.escape(nameId)}`).focus();
               return;
             }
-            onSubmit({ name, icon, emoji, color });
+            if (days.length === 0) {
+              setScheduleError(true);
+              return;
+            }
+            // All seven days is stored as "every day" (no schedule), exactly like older habits.
+            onSubmit({ name, icon, emoji, color, schedule: normalizeSchedule(days) });
             close();
           }}
         >
-          <HabitPreview name={name} icon={icon} emoji={emoji} color={color} />
+          <HabitPreview name={name} icon={icon} emoji={emoji} color={color} schedule={normalizeSchedule(days)} />
 
           {isEditing && stats && <HabitStats stats={stats} monthName={monthName} />}
 
@@ -229,27 +200,40 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
             </div>
           </fieldset>
 
-          <fieldset className="field">
-            <legend className="field-label">Color</legend>
-            <div className="color-options">
-              {HABIT_COLORS.map((option) => (
-                <label key={option.id} className="option" title={option.label}>
-                  <input
-                    type="radio"
-                    name={`${formId}-color`}
-                    value={option.id}
-                    checked={color === option.id}
-                    onChange={() => setColor(option.id)}
-                    className="sr-only"
-                  />
-                  <span className="option-face color-option" style={{ '--swatch': option.value }}>
-                    <span className="sr-only">{option.label}</span>
-                  </span>
-                </label>
-              ))}
-              <CustomColorField color={color} onChange={setColor} />
+          <fieldset className="field schedule-field">
+            <legend className="field-label schedule-legend">
+              Repeat on
+              <span id={scheduleHintId} className={cx('schedule-summary', scheduleError && 'is-error')}>
+                {scheduleError
+                  ? 'Choose at least one day'
+                  : days.length === 0
+                    ? 'No days chosen'
+                    : `${describeFrequency(normalizeSchedule(days))} · ${describeSchedule(normalizeSchedule(days))}`}
+              </span>
+            </legend>
+            <div className="schedule-days" role="group" aria-describedby={scheduleHintId}>
+              {WEEKDAYS.map(({ day, short, label }) => {
+                const selected = days.includes(day);
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    className={cx('schedule-day', selected && 'is-selected')}
+                    aria-pressed={selected}
+                    aria-label={label}
+                    onClick={() => {
+                      setDays((current) => (selected ? current.filter((item) => item !== day) : [...current, day]));
+                      setScheduleError(false);
+                    }}
+                  >
+                    {short}
+                  </button>
+                );
+              })}
             </div>
           </fieldset>
+
+          <ColorPicker value={color} onChange={setColor} />
 
           {pickingEmoji && (
             <Suspense fallback={null}>

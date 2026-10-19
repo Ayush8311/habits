@@ -1,11 +1,8 @@
-import { useState } from 'react';
 import { cx } from '../../lib/classNames.js';
 import './CompletionButton.css';
 
 /** The rounded-square check used everywhere a habit/day pair can be toggled. */
 export function CompletionButton({ done, future, today, label, size = 'md', colorStyle, onToggle, ...props }) {
-  const [animating, setAnimating] = useState(false);
-
   return (
     <button
       type="button"
@@ -15,18 +12,13 @@ export function CompletionButton({ done, future, today, label, size = 'md', colo
         done && 'is-done',
         future && 'is-future',
         today && 'is-today',
-        animating && 'is-animating',
         colorStyle && 'has-habit-color',
       )}
       style={colorStyle}
       aria-label={future ? `${label} (upcoming)` : label}
       aria-pressed={future ? undefined : done}
       disabled={future}
-      onClick={() => {
-        setAnimating(true);
-        onToggle();
-      }}
-      onAnimationEnd={() => setAnimating(false)}
+      onClick={() => onToggle()}
       {...props}
     >
       <svg className="check-mark" viewBox="0 0 16 16" aria-hidden="true">
