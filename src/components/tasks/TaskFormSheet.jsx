@@ -29,7 +29,7 @@ const PERIOD_OPTIONS = [
 const summaryFormat = new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
 /** Day, Month and Year columns: dates only. Days follow the month's length (leap years included). */
-function DateWheel({ dateKey, todayKey, onChange }) {
+export function DateWheel({ dateKey, todayKey, onChange, label = 'Due date' }) {
   const date = parseDateKey(dateKey);
   const year = date.getFullYear();
   const month = date.getMonth();
@@ -53,7 +53,7 @@ function DateWheel({ dateKey, todayKey, onChange }) {
   };
 
   return (
-    <WheelGroup label="Due date" className="task-wheel">
+    <WheelGroup label={label} className="task-wheel">
       <WheelColumn label="Day" options={dayOptions} value={day} onChange={(value) => set(year, month, value)} />
       <WheelColumn label="Month" options={MONTH_OPTIONS} value={month} onChange={(value) => set(year, value, day)} />
       <WheelColumn label="Year" options={yearOptions} value={year} onChange={(value) => set(value, month, day)} />
@@ -118,6 +118,33 @@ const PrioritySection = memo(function PrioritySection({ priority, onChange }) {
               onClick={() => onChange(checked ? null : option.id)}
             >
               {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </fieldset>
+  );
+});
+
+/** Which list the task is in; only shown once the user has lists. */
+const ListSection = memo(function ListSection({ lists, listId, onChange }) {
+  const options = [{ id: null, name: 'Inbox' }, ...lists];
+  return (
+    <fieldset className="task-field task-list-field">
+      <legend className="task-label">List</legend>
+      <div className="task-list-options" role="radiogroup" aria-label="List">
+        {options.map((option) => {
+          const checked = (listId ?? null) === option.id;
+          return (
+            <button
+              key={option.id ?? 'inbox'}
+              type="button"
+              role="radio"
+              aria-checked={checked}
+              className={cx('task-chip task-list-option', checked && 'is-active')}
+              onClick={() => onChange(option.id)}
+            >
+              {option.name}
             </button>
           );
         })}
@@ -223,7 +250,7 @@ const FormActions = memo(function FormActions({ isEditing, onDelete }) {
  * name has focus, the sheet keeps Task name directly above the keyboard with
  * Notes right above it.
  */
-export function TaskFormSheet({ task, todayKey, onSubmit, onDelete, onClose }) {
+export function TaskFormSheet({ task, todayKey, lists = [], defaultListId, onSubmit, onDelete, onClose }) {
   const isEditing = Boolean(task);
   const [id] = useState(() => task?.id ?? createId());
   const [name, setName] = useState(task?.name ?? '');
@@ -231,6 +258,11 @@ export function TaskFormSheet({ task, todayKey, onSubmit, onDelete, onClose }) {
   const [priority, setPriority] = useState(task?.priority ?? null);
   const [dueDate, setDueDate] = useState(task?.dueDate ?? null);
   const [dueTime, setDueTime] = useState(task?.dueTime ?? null);
+  // A new task from inside a list starts in that list.
+  const [listId, setListId] = useState(() => {
+    const initial = task ? task.listId : defaultListId;
+    return lists.some((list) => list.id === initial) ? initial : null;
+  });
   const [mode, setMode] = useState('date');
   const [error, setError] = useState(null);
   const submitted = useRef(false);
@@ -258,7 +290,7 @@ export function TaskFormSheet({ task, todayKey, onSubmit, onDelete, onClose }) {
       return;
     }
     submitted.current = true;
-    onSubmit(id, { name, notes, priority, dueDate, dueTime: dueDate ? dueTime : null });
+    onSubmit(id, { name, notes, priority, dueDate, dueTime: dueDate ? dueTime : null, listId });
     close();
   };
 
@@ -384,6 +416,8 @@ export function TaskFormSheet({ task, todayKey, onSubmit, onDelete, onClose }) {
         >
           {/* 2. Priority (optional: nothing is selected until the user picks one) */}
           <PrioritySection priority={priority} onChange={setPriority} />
+
+          {lists.length > 0 && <ListSection lists={lists} listId={listId} onChange={setListId} />}
 
           {/* 3. Optional time */}
           <TimeToggle hasTime={Boolean(dueTime)} onToggle={toggleTime} />

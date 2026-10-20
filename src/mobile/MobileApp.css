@@ -90,3 +90,128 @@ html:has(.m-app) {
   scroll-padding-top: max(var(--space-4), env(safe-area-inset-top));
   scroll-padding-bottom: calc(56px + env(safe-area-inset-bottom) + var(--space-4));
 }
+
+/* ── Opening a task list: container transform ──────────────────────────────
+   The tapped card is the shared element (see lib/containerTransform.js): its box
+   grows from the card into the list's page while the card's content fades out
+   and the page's content fades in, anchored to the top-left corner so it emerges
+   from the card instead of being stretched. Back plays it in reverse, into the
+   same card. Only snapshots move (transform and opacity on the compositor). */
+.m-screen.is-list-view {
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
+::view-transition-group(list-morph) {
+  animation-duration: 380ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
+}
+:root[data-morph='close']::view-transition-group(list-morph) {
+  animation-duration: 320ms;
+}
+::view-transition-image-pair(list-morph) {
+  overflow: clip;
+  animation: morph-surface 380ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+:root[data-morph='close']::view-transition-image-pair(list-morph) {
+  animation: morph-surface-back 320ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+::view-transition-old(list-morph),
+::view-transition-new(list-morph) {
+  width: 100%;
+  height: 100%;
+  object-fit: none;
+  object-position: 0 0;
+}
+/* Fade through: the outgoing content leaves quickly, the incoming content arrives
+   after it, so the two never show on top of each other. */
+::view-transition-old(list-morph) {
+  animation: morph-fade-out 110ms linear both;
+}
+::view-transition-new(list-morph) {
+  animation: morph-fade-in 230ms 90ms linear both;
+}
+:root[data-morph='close']::view-transition-old(list-morph) {
+  animation-duration: 90ms;
+}
+:root[data-morph='close']::view-transition-new(list-morph) {
+  animation: morph-fade-in 200ms 70ms linear both;
+}
+/* The tab bar and Add new bar stay above the morph and perfectly still (they're
+   the same on both screens), instead of being covered as the card grows. */
+:root[data-morph] .bottom-nav {
+  view-transition-name: morph-nav;
+}
+:root[data-morph] .add-bar-dock {
+  view-transition-name: morph-add-bar;
+}
+::view-transition-group(morph-nav),
+::view-transition-group(morph-add-bar),
+::view-transition-old(morph-nav),
+::view-transition-old(morph-add-bar),
+::view-transition-new(morph-nav),
+::view-transition-new(morph-add-bar) {
+  animation: none;
+}
+::view-transition-old(morph-nav),
+::view-transition-old(morph-add-bar) {
+  display: none;
+}
+/* The rest of the screen (the overview, the list page around the morph) cross-fades. */
+:root[data-morph]::view-transition-old(root),
+:root[data-morph]::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+@keyframes morph-surface {
+  from {
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+  }
+  to {
+    border-radius: 0;
+    background: var(--color-bg);
+  }
+}
+@keyframes morph-surface-back {
+  from {
+    border-radius: 0;
+    background: var(--color-bg);
+  }
+  to {
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+  }
+}
+@keyframes morph-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes morph-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Browsers without view transitions: the list page fades in. */
+@supports not (view-transition-name: none) {
+  .tasks-screen.is-list {
+    animation: list-page-in 200ms var(--ease-out);
+  }
+}
+@keyframes list-page-in {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .tasks-screen.is-list {
+    animation: none;
+  }
+}

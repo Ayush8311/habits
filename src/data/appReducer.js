@@ -5,8 +5,17 @@
 
 import { applyBackup } from '../lib/backup.js';
 import { reorderSubset } from '../lib/order.js';
-import { COMBINED_ORDERS, OPENING_PAGES, PAGE_LAYOUTS, THEMES } from '../lib/preferences.js';
-import { normaliseTaskFields } from '../lib/tasks.js';
+import { ADD_BAR_ORDERS, COMBINED_ORDERS, OPENING_PAGES, PAGE_LAYOUTS, PAGE_ORDERS, THEMES } from '../lib/preferences.js';
+import { MAX_LIST_NAME_LENGTH, normaliseTaskFields } from '../lib/tasks.js';
+
+/** `listId` for a task: an existing list's id, or undefined (no list). */
+const listFor = (state, listId) => ((state.taskLists ?? []).some((list) => list.id === listId) ? listId : undefined);
+
+/** A task with `listId` set (or removed when it's not an existing list). */
+function placeInList(task, listId) {
+  const { listId: _previous, ...rest } = task;
+  return listId === undefined ? rest : { ...rest, listId };
+}
 
 export function appReducer(state, action) {
   switch (action.type) {
@@ -16,6 +25,17 @@ export function appReducer(state, action) {
       const record = { ...state.completions[habitId] };
       if (record[dateKey]) delete record[dateKey];
       else record[dateKey] = true;
+      return { ...state, completions: { ...state.completions, [habitId]: record } };
+    }
+    // Sets (rather than flips) one habit's check-in on one day; nothing else changes.
+    case 'setCompletion': {
+      const { habitId, dateKey, done } = action;
+      if (!state.habits.some((habit) => habit.id === habitId)) return state;
+      const current = state.completions[habitId]?.[dateKey] === true;
+      if (current === Boolean(done)) return state;
+      const record = { ...state.completions[habitId] };
+      if (done) record[dateKey] = true;
+      else delete record[dateKey];
       return { ...state, completions: { ...state.completions, [habitId]: record } };
     }
     case 'add':
@@ -53,14 +73,16 @@ export function appReducer(state, action) {
     case 'addTask':
       // The id is fixed when the form opens, so a repeated submit can't add a second copy.
       if (state.tasks.some((task) => task.id === action.task.id)) return state;
-      return { ...state, tasks: [...state.tasks, action.task] };
+      return { ...state, tasks: [...state.tasks, placeInList(action.task, listFor(state, action.task.listId))] };
     case 'updateTask':
       return {
         ...state,
-        // Fields not passed keep their values; a priority is only changed when one is passed.
-        tasks: state.tasks.map((task) =>
-          task.id === action.id ? { ...task, ...normaliseTaskFields({ ...task, ...action.fields }) } : task,
-        ),
+        // Fields not passed keep their values; a priority or list is only changed when one is passed.
+        tasks: state.tasks.map((task) => {
+          if (task.id !== action.id) return task;
+          const next = { ...task, ...normaliseTaskFields({ ...task, ...action.fields }) };
+          return 'listId' in action.fields ? placeInList(next, listFor(state, action.fields.listId)) : next;
+        }),
       };
     case 'setTaskCompleted':
       return {
@@ -71,6 +93,26 @@ export function appReducer(state, action) {
       };
     case 'deleteTask':
       return { ...state, tasks: state.tasks.filter((task) => task.id !== action.id) };
+
+    // ── Task lists ──
+    case 'addTaskList': {
+      const lists = state.taskLists ?? [];
+      const name = String(action.list.name ?? '').trim().slice(0, MAX_LIST_NAME_LENGTH);
+      if (!name || lists.some((list) => list.id === action.list.id)) return state;
+      return { ...state, taskLists: [...lists, { id: action.list.id, name, createdAt: action.list.createdAt }] };
+    }
+    case 'renameTaskList': {
+      const name = String(action.name ?? '').trim().slice(0, MAX_LIST_NAME_LENGTH);
+      if (!name) return state;
+      return { ...state, taskLists: (state.taskLists ?? []).map((list) => (list.id === action.id ? { ...list, name } : list)) };
+    }
+    // Deleting a list never deletes its tasks: they move out of the list.
+    case 'deleteTaskList':
+      return {
+        ...state,
+        taskLists: (state.taskLists ?? []).filter((list) => list.id !== action.id),
+        tasks: state.tasks.map((task) => (task.listId === action.id ? placeInList(task, undefined) : task)),
+      };
 
     // ── Preferences ──
     case 'setTheme':
@@ -85,6 +127,12 @@ export function appReducer(state, action) {
     case 'setOpeningPage':
       if (!OPENING_PAGES.includes(action.page)) return state;
       return { ...state, preferences: { ...state.preferences, openingPage: action.page } };
+    case 'setAddBarOrder':
+      if (!ADD_BAR_ORDERS.includes(action.order)) return state;
+      return { ...state, preferences: { ...state.preferences, addBarOrder: action.order } };
+    case 'setPageOrder':
+      if (!PAGE_ORDERS.includes(action.order)) return state;
+      return { ...state, preferences: { ...state.preferences, pageOrder: action.order } };
 
     default:
       return state;

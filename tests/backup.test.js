@@ -43,14 +43,16 @@ test('a new backup round-trips tasks, schedules, check-ins, colours and preferen
     habits: [{ ...current.habits[0], schedule: [1, 3, 5], color: '#abcdef' }],
     tasks: [
       ...current.tasks,
-      { id: 'p', name: 'With everything', notes: 'note', dueDate: '2026-11-01', dueTime: '18:30', priority: 'high', completedAt: 99, createdAt: 2 },
+      { id: 'p', name: 'With everything', notes: 'note', dueDate: '2026-11-01', dueTime: '18:30', priority: 'high', completedAt: 99, createdAt: 2, listId: 'L' },
     ],
+    taskLists: [{ id: 'L', name: 'Errands', createdAt: 3 }],
   };
   const backup = parseBackup(serializeState(state));
   assert.equal(backup.hasTasks, true);
   assert.equal(backup.hasPreferences, true);
-  const restored = applyBackup({ ...current, tasks: [], preferences: {} }, backup);
+  const restored = applyBackup({ ...current, tasks: [], taskLists: [], preferences: {} }, backup);
   assert.deepEqual(restored, state);
+  assert.equal(restored.tasks[1].listId, 'L'); // still in its list
   assert.equal(restored.tasks[0].priority, null); // still none after export + import
 });
 

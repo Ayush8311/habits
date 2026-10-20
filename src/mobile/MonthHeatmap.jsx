@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { cx } from '../lib/classNames.js';
 import { addDays, formatFullDate, formatMonthYear, getMonthDays, getMonthOf, isSameMonth } from '../lib/dates.js';
-import { getDailySeries } from '../lib/stats.js';
+import { getCalendarDay } from '../lib/stats.js';
 import './MonthHeatmap.css';
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
@@ -14,7 +14,8 @@ const KEY_STEPS = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
 export function MonthHeatmap({ habits, completions, cursorKey, todayKey, onSelect }) {
   const gridRef = useRef(null);
   const { year, monthIndex } = getMonthOf(cursorKey);
-  const days = getDailySeries(habits, completions, getMonthDays(year, monthIndex));
+  // Every recorded check-in shows, on any past day (see getCalendarDay).
+  const days = getMonthDays(year, monthIndex).map((day) => ({ ...day, ...getCalendarDay(habits, completions, day.key) }));
   const leadingBlanks = (days[0].weekday + 6) % 7;
 
   const onKeyDown = (event) => {

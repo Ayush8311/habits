@@ -1,0 +1,168 @@
+/* Tasks page: the Inbox section (Today, General Tasks) above, the other task lists
+   below. Everything simply stacks and the page scrolls, so a short screen or a
+   long Today list never squeezes anything. */
+
+/* Inbox: its own titled section; Today and General Tasks are its subsections. */
+.tasks-inbox-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-1) var(--space-1);
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+.tasks-inbox-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+}
+.tasks-inbox .m-section {
+  margin-top: var(--space-4);
+}
+
+.tasks-today-empty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  font-size: var(--text-md);
+  color: var(--color-text-secondary);
+}
+.tasks-today-empty svg {
+  flex: none;
+  color: var(--color-accent);
+}
+
+.tasks-lists-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 32px;
+  margin-bottom: var(--space-2);
+}
+.tasks-lists-head .m-section-title {
+  margin-bottom: 0;
+}
+.tasks-lists-empty + .list-grid {
+  margin-top: var(--space-3);
+}
+
+/* Near-square cards, as many per row as fit (two on a phone). */
+.list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.list-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  /* Near-square; a two-line name may make it taller rather than clip. */
+  aspect-ratio: 6 / 5;
+  padding: var(--space-4);
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition:
+    background-color var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+.list-card:active {
+  background: var(--color-fill);
+  transform: scale(0.98);
+}
+.list-card:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-card), var(--focus-ring);
+}
+.list-card-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent-text);
+}
+.list-card-name {
+  display: -webkit-box;
+  max-width: 100%;
+  margin-top: auto;
+  padding-top: var(--space-3);
+  overflow: hidden;
+  /* The list's name leads the card: larger than any other card text, scaling a
+     little with the screen (18px on the narrowest phones, 21px from ~430px). */
+  font-size: clamp(18px, 4.9vw, 21px);
+  font-weight: 650;
+  letter-spacing: -0.022em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.list-card-summary {
+  margin-top: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.list-card-bar {
+  width: 100%;
+  height: 4px;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--color-fill-strong);
+}
+.list-card-bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-accent);
+  transform: scaleX(var(--done, 0));
+  transform-origin: left;
+  transition: transform var(--duration) var(--ease-out);
+}
+
+/* An opened list: a back link above its title. */
+.tasks-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 40px;
+  margin: 0 0 calc(var(--space-2) * -1) -8px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--color-accent-text);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.tasks-back:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .list-card,
+  .list-card-bar span {
+    transition: none;
+  }
+}
+.tasks-screen.is-list .screen-header-title {
+  overflow-wrap: anywhere;
+}

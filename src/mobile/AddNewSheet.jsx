@@ -7,18 +7,20 @@ const CHOICES = [
   { id: 'task', icon: ListTodo, title: 'Task', subtitle: 'Get something done' },
 ];
 
-/** "Add new": exactly two choices. The chosen form opens once this sheet has closed. */
-export function AddNewSheet({ onChoose, onClose }) {
+/** "Add new": exactly two choices, in the order chosen in Settings (Habit first by
+ *  default). The chosen form opens once this sheet has closed. */
+export function AddNewSheet({ order = 'habits-first', onChoose, onClose }) {
+  const choices = order === 'tasks-first' ? [...CHOICES].reverse() : CHOICES;
   return (
     <Modal title="Add new" onClose={onClose} size="sm">
       {(close) => (
         <ul className="add-new-list">
-          {CHOICES.map(({ id, icon: Icon, title, subtitle }) => (
+          {choices.map(({ id, icon: Icon, title, subtitle }, index) => (
             <li key={id}>
               <button
                 type="button"
                 className="add-new-choice"
-                data-autofocus={id === 'habit' ? true : undefined}
+                data-autofocus={index === 0 ? true : undefined}
                 aria-label={`${title}: ${subtitle}`}
                 onClick={() => {
                   onChoose(id);

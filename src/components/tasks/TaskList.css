@@ -6,21 +6,49 @@
 }
 
 .task-row {
+  --swipe-left-color: var(--priority-medium);
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
   min-height: 60px;
-  padding-left: var(--space-3);
 }
-.task-row + .task-row::before {
+.task-row-surface {
+  display: flex;
+  align-items: stretch;
+  min-height: 60px;
+  background: var(--color-surface);
+}
+.task-row + .task-row .task-row-surface::before {
   content: '';
   position: absolute;
   top: 0;
   right: 0;
   left: calc(var(--space-3) + 44px + var(--space-1));
+  z-index: 1;
   height: 0.5px;
   background: var(--color-border-strong);
+}
+
+/* Priority: a soft tint over the whole card, no label. No priority stays neutral. */
+.task-row.is-priority-high .task-row-surface {
+  background: var(--priority-high-soft);
+}
+.task-row.is-priority-medium .task-row-surface {
+  background: var(--priority-medium-soft);
+}
+.task-row.is-priority-low .task-row-surface {
+  background: var(--priority-low-soft);
+}
+/* Done: the tint fades back with the rest of the row. */
+.task-row.is-done[class*='is-priority-'] .task-row-surface {
+  background: color-mix(in srgb, var(--task-tint, var(--color-surface)) 45%, var(--color-surface));
+}
+.task-row.is-done.is-priority-high {
+  --task-tint: var(--priority-high-soft);
+}
+.task-row.is-done.is-priority-medium {
+  --task-tint: var(--priority-medium-soft);
+}
+.task-row.is-done.is-priority-low {
+  --task-tint: var(--priority-low-soft);
 }
 
 /* Round checks tell tasks apart from habits' rounded squares. */
@@ -31,55 +59,56 @@
   border-radius: 50%;
   background: transparent;
   box-shadow: inset 0 0 0 1.75px var(--color-border-strong);
-  touch-action: manipulation;
-}
-.check.task-row-check::after {
-  /* A 44px touch target around the 26px circle. */
-  content: '';
-  position: absolute;
-  width: 44px;
-  height: 44px;
-}
-.check.task-row-check {
-  position: relative;
-}
-.check.task-row-check:disabled {
-  opacity: 0.45;
-  cursor: default;
-}
-.task-row {
-  background: var(--color-surface);
-}
-.check.task-row-check:hover:not(.is-done) {
-  background: var(--color-accent-tint);
+  pointer-events: none;
 }
 .check.task-row-check.is-done {
   background: var(--color-accent);
   box-shadow: none;
 }
 
+/* The whole row is one button: a tap completes the task (Edit mode: edits it). */
 .task-row-main {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  min-height: 60px;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.task-row-main:active {
+  background: var(--color-fill);
+}
+.task-row-main:active .task-row-check {
+  transform: scale(0.94);
+}
+.task-row-main:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-accent-ring);
+}
+.task-row-text {
   display: flex;
   flex: 1;
   flex-direction: column;
   justify-content: center;
   gap: 2px;
   min-width: 0;
-  min-height: 60px;
-  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-1);
-  border: 0;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  touch-action: manipulation;
-  transition: background-color var(--duration-fast) var(--ease-out);
 }
-.task-row-main:active {
-  background: var(--color-fill);
-}
-.task-row-main:focus-visible {
-  outline: none;
-  box-shadow: inset 0 0 0 2px var(--color-accent-ring);
+.task-row-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  max-width: 60%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .task-row-name {
@@ -120,27 +149,6 @@
 }
 .task-row.is-done .task-row-meta {
   opacity: 0.7;
-}
-
-.task-priority-badge {
-  padding: 1px 7px;
-  border: 1px solid currentColor;
-  border-radius: var(--radius-full);
-  font-size: 11.5px;
-  font-weight: 600;
-  line-height: 1.35;
-}
-.task-priority-badge.is-low {
-  color: var(--priority-low);
-  background: var(--priority-low-soft);
-}
-.task-priority-badge.is-medium {
-  color: var(--priority-medium);
-  background: var(--priority-medium-soft);
-}
-.task-priority-badge.is-high {
-  color: var(--priority-high);
-  background: var(--priority-high-soft);
 }
 
 .task-section-count {
@@ -198,4 +206,42 @@
   /* room for the card's shadow while expanded */
   padding: 0 2px 2px;
   margin: 0 -2px -2px;
+}
+
+/* A task that just moved to the other section, or was just added, arrives gently;
+   a completed one draws its tick (see justArrived in TaskList.jsx). */
+.task-row.is-arriving .task-row-surface {
+  animation: task-arrive 260ms var(--ease-out);
+}
+.task-row.is-arriving.is-done .task-row-check {
+  animation: task-check-pop 300ms var(--ease-out);
+}
+.task-row.is-arriving.is-done .check-mark path {
+  animation: task-tick 240ms 60ms var(--ease-out) both;
+}
+@keyframes task-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+}
+@keyframes task-check-pop {
+  from {
+    transform: scale(0.8);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+}
+@keyframes task-tick {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .task-row.is-arriving .task-row-surface,
+  .task-row.is-arriving.is-done .task-row-check,
+  .task-row.is-arriving.is-done .check-mark path {
+    animation: none;
+  }
 }

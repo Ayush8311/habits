@@ -1,9 +1,11 @@
 import { memo } from 'react';
-import { ChevronDown, ChevronRight, ChevronUp, Flame, GripVertical } from 'lucide-react';
+import { Check, ChevronDown, ChevronRight, ChevronUp, Flame, GripVertical, Undo2 } from 'lucide-react';
 import { HabitIcon } from '../components/calendar/HabitIcon.jsx';
+import { useSwipeRow } from '../hooks/useSwipeRow.js';
 import { habitColorStyle } from '../lib/habitOptions.js';
 import { cx } from '../lib/classNames.js';
 import { tapFeedback } from '../lib/haptics.js';
+import '../components/ui/SwipeRow.css';
 import './HabitCheckRow.css';
 
 function describeStreak(current, best, done) {
@@ -14,8 +16,11 @@ function describeStreak(current, best, done) {
 
 /**
  * One habit as a full-width tappable row. In `toggle` mode a tap completes or
- * un-completes it; in `edit` mode a tap opens the editor and, when `reorder` is
- * given, a drag handle (plus screen-reader Move up/down) reorders it.
+ * un-completes it, a swipe right marks it done, a swipe left undoes a completion,
+ * and a long press opens the editor (when `onEdit` is given). Swipes only ever set
+ * the check-in of the row's own day (`onSetDone(id, done)`): a recurring habit's
+ * schedule never moves. In `edit` mode a tap opens the editor and, when `reorder`
+ * is given, a drag handle (plus screen-reader Move up/down) reorders it.
  *
  * Memoised: callbacks receive the habit id and streaks arrive as numbers, so
  * checking one habit re-renders that row only, not the whole list.
@@ -31,24 +36,52 @@ export const HabitCheckRow = memo(function HabitCheckRow({
   unscheduled = false,
   dateLabel,
   onToggle,
+  onSetDone,
   onEdit,
   reorder,
+  hintId,
 }) {
   const meta = metaText ? { text: metaText, hot: false } : describeStreak(streakCurrent, streakBest, done);
   const editing = mode === 'edit';
+  const gestures = !editing && !disabled;
+  const { rowRef, surfaceRef, rowProps } = useSwipeRow({
+    enabled: gestures,
+    onLongPress: onEdit ? () => onEdit(habit.id) : undefined,
+    onSwipeRight: onSetDone && !done ? () => onSetDone(habit.id, true) : undefined,
+    onSwipeLeft: onSetDone && done ? () => onSetDone(habit.id, false) : undefined,
+  });
 
   const label = editing
     ? `Edit ${habit.name}`
     : `${habit.name}${dateLabel ? `, ${dateLabel}` : ''}. ${meta.text}.${disabled ? ' Upcoming.' : ''}`;
 
   return (
-    <li className={cx('check-row-item', editing && reorder && 'has-handle')} data-reorder-id={habit.id}>
+    <li
+      ref={rowRef}
+      className={cx('check-row-item swipe-row', editing && reorder && 'has-handle')}
+      data-reorder-id={habit.id}
+      style={habitColorStyle(habit.color)}
+      {...rowProps}
+    >
+      {gestures && (
+        <span className="swipe-actions" aria-hidden="true">
+          <span className="swipe-action is-right">
+            <Check size={18} strokeWidth={2.4} />
+            Done
+          </span>
+          <span className="swipe-action is-left">
+            Undo
+            <Undo2 size={18} strokeWidth={2.2} />
+          </span>
+        </span>
+      )}
       <button
+        ref={surfaceRef}
         type="button"
-        className={cx('check-row', done && 'is-done', disabled && 'is-disabled', unscheduled && 'is-unscheduled')}
-        style={habitColorStyle(habit.color)}
+        className={cx('check-row swipe-surface', done && 'is-done', disabled && 'is-disabled', unscheduled && 'is-unscheduled')}
         aria-pressed={editing || disabled ? undefined : done}
         aria-label={label}
+        aria-describedby={gestures ? hintId : undefined}
         disabled={disabled}
         onClick={() => {
           if (editing) {

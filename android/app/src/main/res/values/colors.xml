@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Habit's palette (src/styles/tokens.css and assets/habit-icon.svg). -->
+<!-- mink's palette (src/styles/tokens.css). -->
 <resources>
     <color name="colorPrimary">#4A9466</color>
     <color name="colorPrimaryDark">#3B7F57</color>

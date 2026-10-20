@@ -3,14 +3,21 @@ import { CalendarDays, ChartNoAxesColumn, CircleCheckBig, ListTodo, Settings } f
 import { tapFeedback } from '../lib/haptics.js';
 import './BottomNav.css';
 
-// Tasks first (leftmost). In the Combined layout the Tasks tab is left out.
+// Every destination, by id. The ids never change (links, saved settings); the
+// order comes from Settings (see tabOrder) and the Habit page's label from the
+// layout: 'Habit' on Separate pages, 'Duel' when habits and tasks share the page.
 export const TABS = [
   { id: 'tasks', label: 'Tasks', icon: ListTodo },
-  { id: 'today', label: 'Today', icon: CircleCheckBig },
+  { id: 'today', label: 'Habit', icon: CircleCheckBig },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'insights', label: 'Insights', icon: ChartNoAxesColumn },
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
+const TAB_BY_ID = Object.fromEntries(TABS.map((tab) => [tab.id, tab]));
+
+/** The tab bar's items for tab ids in order (see tabOrder) and a page layout. */
+export const buildTabs = (ids, layout) =>
+  ids.map((id) => (id === 'today' && layout === 'combined' ? { ...TAB_BY_ID[id], label: 'Duel' } : TAB_BY_ID[id]));
 
 /** `tabs` are the destinations of the current page layout (see TABS). Memoised: it
  *  re-renders only when the active tab or the layout changes. */

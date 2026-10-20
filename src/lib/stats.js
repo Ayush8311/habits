@@ -70,6 +70,30 @@ export function getOverallProgress(habits, completions, keys) {
   return { done, total, rate: ratio(done, total) };
 }
 
+/**
+ * The calendar's figures for one day, which set its shade (done ÷ total, from the
+ * lightest to the darkest green): every habit scheduled on that weekday counts,
+ * whether or not it had been added by then, plus any habit checked off on a day
+ * it isn't scheduled. So correcting a past day moves through the same scale as
+ * today: with 7 habits, one check-in is 1 of 7, never 1 of 1.
+ *
+ * (A habit's creation date only limits statistics: rates, Perfect Days and Best
+ * Day/Week count expected days only, so back-filling can't inflate them. Using it
+ * here made a back-filled day count only the habits checked on it, so its first
+ * check-in showed as 100%, the darkest shade.)
+ */
+export function getCalendarDay(habits, completions, key) {
+  let done = 0;
+  let total = 0;
+  for (const habit of habits) {
+    const checked = isCompleted(completions, habit.id, key);
+    if (!checked && !isScheduledOn(habit.schedule, key)) continue;
+    total += 1;
+    if (checked) done += 1;
+  }
+  return { done, total, rate: ratio(done, total) };
+}
+
 /** One entry per day: how many of the habits expected that day were completed. */
 export function getDailySeries(habits, completions, days) {
   return days.map((day) => {

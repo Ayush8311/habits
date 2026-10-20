@@ -26,7 +26,7 @@ let offlineReady = false;
 let needRefresh = false;
 let updateServiceWorker = null;
 
-/** True when Habit is running as an installed app rather than in a browser tab. */
+/** True when mink is running as an installed app rather than in a browser tab. */
 export const isStandalone = () =>
   isNativeApp ||
   STANDALONE_QUERIES.some((query) => window.matchMedia(query).matches) || window.navigator.standalone === true;

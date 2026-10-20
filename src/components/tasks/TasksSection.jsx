@@ -5,7 +5,7 @@ import { TaskList } from './TaskList.jsx';
 import './TasksSection.css';
 
 /** Tasks on the desktop layout: the same list and form as the phone's Tasks tab. */
-export function TasksSection({ store, todayKey, onAddTask, onEditTask }) {
+export function TasksSection({ store, todayKey, onAddTask, onEditTask, onPostponeTask }) {
   return (
     <section className="tasks-section" aria-labelledby="tasks-section-title">
       <div className="tasks-section-head">
@@ -21,6 +21,8 @@ export function TasksSection({ store, todayKey, onAddTask, onEditTask }) {
         todayKey={todayKey}
         onToggle={store.setTaskCompleted}
         onEdit={onEditTask}
+        onPostpone={onPostponeTask}
+        listNames={new Map((store.state.taskLists ?? []).map((list) => [list.id, list.name]))}
         emptyState={
           <div className="card">
             <EmptyState icon={ListTodo} title="No tasks yet" message="One-off things to get done, kept apart from your habits." />

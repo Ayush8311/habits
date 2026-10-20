@@ -1,0 +1,38 @@
+.postpone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.postpone-chevron {
+  transition: transform var(--duration) var(--ease-out);
+}
+.postpone-chevron.is-open {
+  transform: rotate(90deg);
+}
+.postpone-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  animation: postpone-in 200ms var(--ease-out);
+}
+.postpone-hint {
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.postpone-confirm {
+  width: 100%;
+}
+@keyframes postpone-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .postpone-picker {
+    animation: none;
+  }
+}

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import { CalendarPlus, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { WeekList } from '../../components/calendar/WeekList.jsx';
 import { EmptyState } from '../../components/EmptyState.jsx';
@@ -17,9 +17,8 @@ import {
   shiftMonth,
 } from '../../lib/dates.js';
 import {
-  countApplicableOn,
-  countCompletedOn,
   eligibleKeys,
+  getCalendarDay,
   getHabitProgress,
   getHabitStreaks,
   getTrackingStart,
@@ -35,11 +34,12 @@ const VIEW_OPTIONS = [
   { value: 'month', label: 'Month' },
 ];
 
-function DayDetail({ store, dateKey, todayKey }) {
+function DayDetail({ store, dateKey, todayKey, onEditHabit }) {
+  const hintId = useId();
   const { habits, completions } = store.state;
   const future = dateKey > todayKey;
-  const done = countCompletedOn(habits, completions, dateKey);
-  const tracked = countApplicableOn(habits, completions, dateKey);
+  // The same figures as the day's colour in the month above.
+  const { done, total: tracked } = getCalendarDay(habits, completions, dateKey);
 
   return (
     <section className="m-section" aria-labelledby="day-detail-title" aria-live="polite">
@@ -49,6 +49,9 @@ function DayDetail({ store, dateKey, todayKey }) {
         </h2>
         <p className="day-detail-count">{future ? 'Upcoming' : `${done} of ${tracked} done`}</p>
       </div>
+      <p id={hintId} className="sr-only">
+        Tap to change this day’s record. Long press to edit the habit. Swipe right to mark done, or left to undo.
+      </p>
       <ul className="m-card check-list">
         {habits.map((habit) => {
           const isDone = completions[habit.id]?.[dateKey] === true;
@@ -67,7 +70,11 @@ function DayDetail({ store, dateKey, todayKey }) {
               streakCurrent={streak.current}
               streakBest={streak.best}
               metaText={future ? 'Upcoming' : expected ? (isDone ? 'Completed' : 'Not completed') : isDone ? `Completed · ${why.toLowerCase()}` : why}
+              hintId={hintId}
+              // Only this habit's record for this exact day changes.
               onToggle={(id) => store.toggleCompletion(id, dateKey)}
+              onSetDone={(id, done) => store.setCompletion(id, dateKey, done)}
+              onEdit={onEditHabit}
             />
           );
         })}
@@ -192,7 +199,7 @@ export function CalendarScreen({
               onSelect={onCursorChange}
             />
           </div>
-          <DayDetail store={store} dateKey={cursorKey} todayKey={todayKey} />
+          <DayDetail store={store} dateKey={cursorKey} todayKey={todayKey} onEditHabit={onEditHabit} />
         </>
       )}
     </div>

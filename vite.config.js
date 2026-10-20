@@ -30,8 +30,8 @@ export default defineConfig({
         // the origin instead, so it names the base path explicitly; otherwise every app
         // on <user>.github.io would share one identity.
         id: base,
-        name: 'Habit',
-        short_name: 'Habit',
+        name: 'mink',
+        short_name: 'mink',
         description: 'A calm, personal habit tracker: check in daily, keep streaks and see your progress.',
         lang: 'en',
         start_url: './',

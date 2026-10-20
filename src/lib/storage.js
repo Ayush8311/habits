@@ -6,11 +6,11 @@
 import { isDateKey } from './dates.js';
 import { DEFAULT_COLOR, DEFAULT_ICON, MAX_NAME_LENGTH, isEmoji, isHabitIcon, normalizeHex, isPresetColor } from './habitOptions.js';
 import { normalizeSchedule } from './schedule.js';
-import { sanitizeTasks } from './tasks.js';
+import { sanitizeTaskLists, sanitizeTasks, withValidList } from './tasks.js';
 import { sanitizePreferences } from './preferences.js';
 
 export const STORAGE_KEY = 'habit.state.v1';
-// Still version 1: tasks, preferences and habit schedules are optional additions.
+// Still version 1: tasks, task lists, preferences and habit schedules are optional additions.
 // Data without them (older saves and backups) reads exactly as before.
 export const SCHEMA_VERSION = 1;
 
@@ -54,7 +54,11 @@ export function sanitizeState(input) {
     completions[habit.id] = record;
   }
 
-  return { habits, completions, tasks: sanitizeTasks(input.tasks), preferences: sanitizePreferences(input.preferences) };
+  // Lists are an optional addition: older data has none, and its tasks are in no list.
+  const taskLists = sanitizeTaskLists(input.taskLists);
+  const listIds = new Set(taskLists.map((list) => list.id));
+  const tasks = sanitizeTasks(input.tasks).map((task) => withValidList(task, listIds));
+  return { habits, completions, tasks, taskLists, preferences: sanitizePreferences(input.preferences) };
 }
 
 /**

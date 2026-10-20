@@ -1,0 +1,84 @@
+/* A list row that can be swiped (see useSwipeRow). The row holds the action
+   colours; its surface carries the content and slides over them. */
+.swipe-row {
+  --swipe-progress: 0;
+  position: relative;
+  touch-action: pan-y; /* vertical pans scroll the page; sideways moves are the row's */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.swipe-surface {
+  position: relative;
+  z-index: 1;
+  transition: transform 220ms var(--ease-out);
+}
+.swipe-row.is-swiping .swipe-surface {
+  will-change: transform;
+}
+
+/* Revealed behind the surface on the side it moves away from. */
+.swipe-actions {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  pointer-events: none;
+}
+.swipe-row:not([data-swipe='right']):not([data-swipe='left']) .swipe-actions {
+  visibility: hidden;
+}
+.swipe-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 var(--space-5);
+  font-size: var(--text-md);
+  font-weight: 600;
+  opacity: calc(0.4 + var(--swipe-progress) * 0.6);
+}
+.swipe-action svg {
+  transition: transform 160ms var(--ease-out);
+}
+.swipe-row.is-armed .swipe-action svg {
+  transform: scale(1.15);
+}
+.swipe-action.is-right {
+  display: none;
+}
+.swipe-action.is-left {
+  display: none;
+  margin-left: auto;
+}
+.swipe-row[data-swipe='right'] {
+  --swipe-color: var(--color-accent);
+}
+.swipe-row[data-swipe='left'] {
+  --swipe-color: var(--swipe-left-color, var(--color-warm));
+}
+.swipe-row[data-swipe='right'] .swipe-action.is-right,
+.swipe-row[data-swipe='left'] .swipe-action.is-left {
+  display: inline-flex;
+}
+/* Before the commit point: a pale fill with the label in the action's colour.
+   Past it (release now acts): the full colour with a white label. */
+.swipe-row[data-swipe] .swipe-actions {
+  background: color-mix(in srgb, var(--swipe-color) 16%, var(--color-surface));
+  color: var(--swipe-color);
+  transition: background-color 120ms var(--ease-out), color 120ms var(--ease-out);
+}
+.swipe-row.is-armed .swipe-actions {
+  background: var(--swipe-color);
+  color: var(--color-on-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-surface,
+  .swipe-action svg {
+    transition: none;
+  }
+}

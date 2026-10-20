@@ -27,7 +27,7 @@ check(/name="apple-mobile-web-app-capable"/.test(html), 'index.html has no iOS w
 const manifestPath = file('manifest.webmanifest');
 if (existsSync(manifestPath)) {
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-  check(manifest.name === 'Habit' && manifest.short_name === 'Habit', 'manifest name/short_name should be "Habit"');
+  check(manifest.name === 'mink' && manifest.short_name === 'mink', 'manifest name/short_name should be "mink"');
   check(manifest.display === 'standalone', 'manifest display should be "standalone"');
   check(manifest.start_url && manifest.scope && manifest.id, 'manifest needs start_url, scope and id');
   check(manifest.theme_color && manifest.background_color, 'manifest needs theme_color and background_color');

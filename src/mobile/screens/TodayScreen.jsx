@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ListTodo, Plus, Sparkles, SunMedium } from 'lucide-react';
 import { EmptyState } from '../../components/EmptyState.jsx';
 import { ProgressRing } from '../../components/ProgressRing.jsx';
@@ -58,8 +58,10 @@ function CompactHeader({ todayKey, done, total, editing, canEdit, onToggleEdit, 
 
 /** The habit list (both layouts). Rows are memoised; callbacks are stable. */
 function HabitsSection({ store, todayKey, habits, completions, dueToday, isEditing, onAddHabit, onEditHabit }) {
-  const { toggleCompletion, reorderHabits } = store; // stable functions
+  const { toggleCompletion, setCompletion, reorderHabits } = store; // stable functions
   const toggle = useCallback((habitId) => toggleCompletion(habitId, todayKey), [toggleCompletion, todayKey]);
+  const setDone = useCallback((habitId, done) => setCompletion(habitId, todayKey, done), [setCompletion, todayKey]);
+  const hintId = useId();
   const habitIds = useMemo(() => habits.map((habit) => habit.id), [habits]);
   const reorder = useReorder({ ids: habitIds, onReorder: reorderHabits });
   const streaks = useMemo(
@@ -68,7 +70,10 @@ function HabitsSection({ store, todayKey, habits, completions, dueToday, isEditi
   );
 
   return (
-    <section className="m-section home-habits" aria-labelledby="today-habits-title">
+    <section className="m-section home-habits" id="home-habits" aria-labelledby="today-habits-title">
+      <p id={hintId} className="sr-only">
+        Tap to mark done or not done for today. Long press to edit. Swipe right to mark done, or left to undo.
+      </p>
       <h2 id="today-habits-title" className="m-section-title">
         {isEditing ? 'Habits · tap to edit, drag to reorder' : 'Habits'}
       </h2>
@@ -103,7 +108,9 @@ function HabitsSection({ store, todayKey, habits, completions, dueToday, isEditi
                 streakBest={streaks[habit.id].best}
                 mode={isEditing ? 'edit' : 'toggle'}
                 onToggle={toggle}
+                onSetDone={setDone}
                 onEdit={onEditHabit}
+                hintId={hintId}
                 reorder={isEditing ? reorder : undefined}
               />
             );
@@ -121,7 +128,8 @@ function HabitsSection({ store, todayKey, habits, completions, dueToday, isEditi
 }
 
 /**
- * Today. In the Separate layout: the original header and summary card, then habits.
+ * The Habit page ('today'; called Duel on the Combined page). In the Separate
+ * layout: the original header and summary card, then habits.
  * In the Combined layout: a compact header, habits, then tasks on the same page.
  */
 export function TodayScreen({
@@ -132,6 +140,7 @@ export function TodayScreen({
   onEditHabit,
   onAddTask,
   onEditTask,
+  onPostponeTask,
   onOpenCalendar,
   scrollToTasks = false,
 }) {
@@ -184,6 +193,7 @@ export function TodayScreen({
         todayKey={todayKey}
         onToggle={store.setTaskCompleted}
         onEdit={onEditTask}
+        onPostpone={onPostponeTask}
         onReorder={store.reorderTasks}
         editing={isEditing}
         title="Tasks"
@@ -208,6 +218,9 @@ export function TodayScreen({
   return (
     <div className={combined ? 'today is-combined' : 'today'}>
       {combined ? (
+        <>
+        {/* The page's name for assistive technology; the compact header shows the date. */}
+        <h1 className="sr-only">Duel</h1>
         <CompactHeader
           todayKey={todayKey}
           done={done}
@@ -217,12 +230,13 @@ export function TodayScreen({
           onToggleEdit={toggleEdit}
           onOpenCalendar={onOpenCalendar}
         />
+        </>
       ) : (
         <>
           <ScreenHeader
             eyebrow={formatFullDateWithYear(todayKey)}
             wideEyebrow
-            title="Today"
+            title="Habit"
             actions={
               habits.length > 0 && (
                 <Button variant="tertiary" onClick={toggleEdit}>

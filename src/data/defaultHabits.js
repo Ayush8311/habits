@@ -24,7 +24,7 @@ export function createDefaultState(todayKey) {
     createdAt: todayKey,
     schedule: null, // every day
   }));
-  return { habits, completions: Object.fromEntries(habits.map((habit) => [habit.id, {}])), tasks: [], preferences: {} };
+  return { habits, completions: Object.fromEntries(habits.map((habit) => [habit.id, {}])), tasks: [], taskLists: [], preferences: {} };
 }
 
 /**

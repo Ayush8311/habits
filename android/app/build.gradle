@@ -58,7 +58,7 @@ android {
             // Installs next to the release app, so testing never touches real habit data.
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
-            // Its name is "Habit Debug" (src/debug/res/values/strings.xml).
+            // Its name is "mink debug" (src/debug/res/values/strings.xml).
         }
         release {
             if (hasReleaseSigning) signingConfig signingConfigs.release

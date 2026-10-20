@@ -48,13 +48,14 @@
   --color-danger-ring: rgba(194, 70, 58, 0.35);
   --color-danger-ring-soft: rgba(194, 70, 58, 0.18);
 
-  /* Task priority: understated, distinguished by label first and colour second. */
-  --priority-low: #416a7b;
-  --priority-low-soft: #edf3f5;
-  --priority-medium: #855c14;
-  --priority-medium-soft: #f8f0e1;
+  /* Task priority: a soft tint over the whole task card (red, yellow, blue),
+     pale enough that every text colour keeps its contrast. */
+  --priority-low: #3f6c8f;
+  --priority-low-soft: #eaf1fa;
+  --priority-medium: #8a6410;
+  --priority-medium-soft: #fbf3d5;
   --priority-high: #b0493a;
-  --priority-high-soft: #f9ebe8;
+  --priority-high-soft: #fbe9e6;
 
   --color-backdrop: rgba(29, 29, 31, 0.26);
   --color-scrim-edge: rgba(29, 29, 31, 0.06);
@@ -151,12 +152,12 @@
   --color-danger-ring: rgba(226, 118, 106, 0.4);
   --color-danger-ring-soft: rgba(226, 118, 106, 0.22);
 
-  --priority-low: #8fb6c6;
-  --priority-low-soft: #1f2c31;
-  --priority-medium: #dcb06a;
-  --priority-medium-soft: #332a1c;
+  --priority-low: #8fb3d6;
+  --priority-low-soft: #1c2735;
+  --priority-medium: #dcb45f;
+  --priority-medium-soft: #322b15;
   --priority-high: #ec8f80;
-  --priority-high-soft: #3a2421;
+  --priority-high-soft: #3a2220;
 
   --color-backdrop: rgba(0, 0, 0, 0.5);
   --color-scrim-edge: rgba(0, 0, 0, 0.3);

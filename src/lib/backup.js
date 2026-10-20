@@ -4,6 +4,7 @@
 import { getTodayKey } from './dates.js';
 import { isNativeApp } from './platform.js';
 import { migrateState, serializeState } from './storage.js';
+import { withValidList } from './tasks.js';
 
 /** Saves a backup through the share sheet on phones, or as a download elsewhere. */
 export async function exportBackup(state) {
@@ -63,7 +64,12 @@ export function parseBackup(text) {
   }
   const state = migrateState(raw);
   if (!state) return null;
-  return { state, hasTasks: Array.isArray(raw.tasks), hasPreferences: Boolean(raw.preferences) && typeof raw.preferences === 'object' };
+  return {
+    state,
+    hasTasks: Array.isArray(raw.tasks),
+    hasTaskLists: Array.isArray(raw.taskLists),
+    hasPreferences: Boolean(raw.preferences) && typeof raw.preferences === 'object',
+  };
 }
 
 /** Resolves to a parsed backup (see parseBackup), or null if the file isn't a Habit backup. */
@@ -78,11 +84,17 @@ export async function readBackup(file) {
  * has them: restoring an older backup never deletes tasks or resets the theme.
  */
 export function applyBackup(current, backup) {
-  const { state, hasTasks, hasPreferences } = backup;
+  const { state, hasTasks, hasTaskLists, hasPreferences } = backup;
+  const tasks = hasTasks ? state.tasks : (current.tasks ?? []);
+  // Lists travel with the tasks. A backup from before lists keeps this device's lists
+  // (its tasks are in none); tasks only stay in lists that exist after the restore.
+  const taskLists = hasTaskLists ? state.taskLists : (current.taskLists ?? []);
+  const listIds = new Set(taskLists.map((list) => list.id));
   return {
     habits: state.habits,
     completions: state.completions,
-    tasks: hasTasks ? state.tasks : (current.tasks ?? []),
+    tasks: tasks.map((task) => withValidList(task, listIds)),
+    taskLists,
     preferences: hasPreferences ? { ...current.preferences, ...state.preferences } : (current.preferences ?? {}),
   };
 }

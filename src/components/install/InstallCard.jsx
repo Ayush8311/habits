@@ -11,13 +11,13 @@ export function InstallCard({ flow }) {
     <div className="install-card">
       <img className="install-card-icon" src={`${import.meta.env.BASE_URL}apple-touch-icon.png`} alt="" width="52" height="52" />
       <div className="install-card-text">
-        <p className="install-card-title">{installed ? 'Habit is installed' : 'Install App'}</p>
+        <p className="install-card-title">{installed ? 'mink is installed' : 'Install App'}</p>
         <p className="install-card-description">
           {status === 'installed'
             ? 'You’re using the installed app.'
             : status === 'just-installed'
-              ? 'Open Habit from your home screen or app list.'
-              : 'Add Habit to your device for quick access.'}
+              ? 'Open mink from your home screen or app list.'
+              : 'Add mink to your device for quick access.'}
         </p>
         {message && (
           <p className="install-card-message" role="status">

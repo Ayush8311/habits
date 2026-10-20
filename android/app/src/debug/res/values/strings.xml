@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- The debug build installs alongside the release app, so it gets its own name. -->
 <resources>
-    <string name="app_name">Habit Debug</string>
-    <string name="title_activity_main">Habit Debug</string>
+    <string name="app_name">mink debug</string>
+    <string name="title_activity_main">mink debug</string>
 </resources>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Launch screen before Android 12: the app background with the Habit mark centred. -->
+<!-- Launch screen before Android 12: the app background with the mink logo centred. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@color/habit_background" />
     <item

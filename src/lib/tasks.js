@@ -1,6 +1,6 @@
 // One-off tasks, stored next to habits but never part of any habit statistic.
 //
-// A task is { id, name, notes, dueDate, dueTime, priority, completedAt, createdAt }:
+// A task is { id, name, notes, dueDate, dueTime, priority, completedAt, createdAt, listId? }:
 //   dueDate      local "YYYY-MM-DD" or null. A calendar day, never a timestamp, so it
 //                can't shift when the time zone changes.
 //   dueTime      local "HH:MM" (24-hour) or null; only kept when there is a dueDate.
@@ -8,6 +8,10 @@
 //                never shown as, or replaced by, a default.
 //   completedAt  epoch milliseconds when completed, or null while pending.
 //   createdAt    epoch milliseconds, for a stable order.
+//   listId       the id of the user's task list it belongs to. Absent means no list
+//                (every task saved before lists existed), so older data is unchanged.
+//
+// Task lists are { id, name, createdAt }, stored as `taskLists` next to `tasks`.
 
 import { addDays, formatMonthDay, isDateKey, parseDateKey } from './dates.js';
 
@@ -34,7 +38,7 @@ function sanitizeTask(raw) {
   const name = raw.name.trim().slice(0, MAX_TASK_NAME_LENGTH);
   if (!name) return null;
   const dueDate = isDateKey(raw.dueDate) ? raw.dueDate : null;
-  return {
+  const task = {
     id: raw.id,
     name,
     notes: typeof raw.notes === 'string' ? raw.notes.slice(0, MAX_TASK_NOTES_LENGTH) : '',
@@ -44,6 +48,8 @@ function sanitizeTask(raw) {
     completedAt: isTimestamp(raw.completedAt) ? raw.completedAt : null,
     createdAt: isTimestamp(raw.createdAt) ? raw.createdAt : 0,
   };
+  if (typeof raw.listId === 'string' && raw.listId) task.listId = raw.listId;
+  return task;
 }
 
 /** Valid tasks only, duplicates by id dropped. Missing or invalid input → []. */
@@ -60,6 +66,56 @@ export function sanitizeTasks(input) {
   }
   return tasks;
 }
+
+// ── Task lists ──────────────────────────────────────────────────────────────
+
+export const MAX_LIST_NAME_LENGTH = 40;
+
+/** Valid lists only, duplicates by id dropped. Missing or invalid input → []. */
+export function sanitizeTaskLists(input) {
+  if (!Array.isArray(input)) return [];
+  const seen = new Set();
+  const lists = [];
+  for (const raw of input) {
+    if (!raw || typeof raw !== 'object' || typeof raw.id !== 'string' || !raw.id || seen.has(raw.id)) continue;
+    const name = typeof raw.name === 'string' ? raw.name.trim().slice(0, MAX_LIST_NAME_LENGTH) : '';
+    if (!name) continue;
+    seen.add(raw.id);
+    lists.push({ id: raw.id, name, createdAt: isTimestamp(raw.createdAt) ? raw.createdAt : 0 });
+  }
+  return lists;
+}
+
+/** A task's list, only if that list exists; otherwise the task has no list. */
+export function withValidList(task, listIds) {
+  if (task.listId === undefined || listIds.has(task.listId)) return task;
+  const { listId: _dropped, ...rest } = task;
+  return rest;
+}
+
+export function validateListName(name, existingNames = new Set()) {
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  if (!trimmed) return 'Give your list a name.';
+  if (trimmed.length > MAX_LIST_NAME_LENGTH) return `Keep it under ${MAX_LIST_NAME_LENGTH} characters.`;
+  if (existingNames.has(trimmed.toLowerCase())) return 'You already have a list with this name.';
+  return null;
+}
+
+/** Tasks in one list; `null` means the tasks that aren't in any list. */
+export const tasksInList = (tasks, listId) =>
+  tasks.filter((task) => (listId === null ? task.listId === undefined : task.listId === listId));
+
+/**
+ * Today's tasks, from every list: those due on today's local date, unfinished or
+ * finished (finished ones show under Completed). Tasks from earlier days, later
+ * days or with no date stay in their lists only. A view of the stored tasks, never
+ * a copy, so any change shows everywhere at once.
+ */
+export const todaysTasks = (tasks, todayKey) => tasks.filter((task) => task.dueDate === todayKey);
+
+/** General tasks: those in no list, except the ones due today (they're under Today). */
+export const generalTasks = (tasks, todayKey) =>
+  tasks.filter((task) => task.listId === undefined && task.dueDate !== todayKey);
 
 export function validateTaskName(name) {
   const trimmed = typeof name === 'string' ? name.trim() : '';

@@ -31,7 +31,7 @@ export function useInstallFlow() {
     }
     const outcome = await promptInstall();
     if (outcome === 'accepted') setMessage('Installing Habit…');
-    else if (outcome === 'dismissed') setMessage('Installation cancelled. You can install Habit any time.');
+    else if (outcome === 'dismissed') setMessage('Installation cancelled. You can install mink any time.');
     else setGuideOpen(true);
   };
 

@@ -5,7 +5,14 @@ import { SegmentedControl } from '../../components/ui/SegmentedControl.jsx';
 import { countCheckIns } from '../../lib/backup.js';
 import { cx } from '../../lib/classNames.js';
 import { isNativeApp } from '../../lib/platform.js';
-import { getCombinedOrder, getOpeningPage, getPageLayout, getTheme } from '../../lib/preferences.js';
+import {
+  getAddBarOrder,
+  getCombinedOrder,
+  getOpeningPage,
+  getPageLayout,
+  getPageOrder,
+  getTheme,
+} from '../../lib/preferences.js';
 import { ScreenHeader } from '../ScreenHeader.jsx';
 import './SettingsScreen.css';
 
@@ -62,7 +69,7 @@ const THEME_OPTIONS = [
   { value: 'system', label: 'System' },
 ];
 
-/** Only offered while Habit isn't installed; once installed there is nothing to show. */
+/** Only offered while mink isn't installed; once installed there is nothing to show. */
 function InstallGroup() {
   const flow = useInstallFlow();
   const installed = flow.status === 'installed' || flow.status === 'just-installed';
@@ -95,7 +102,15 @@ const ORDER_OPTIONS = [
 ];
 const OPENING_OPTIONS = [
   { value: 'tasks', label: 'Tasks' },
-  { value: 'today', label: 'Habits' },
+  { value: 'today', label: 'Habit' },
+];
+const PAGE_ORDER_OPTIONS = [
+  { value: 'tasks-first', label: 'Tasks first' },
+  { value: 'habits-first', label: 'Habit first' },
+];
+const ADD_BAR_ORDER_OPTIONS = [
+  { value: 'habits-first', label: 'habits-tasks' },
+  { value: 'tasks-first', label: 'tasks-habits' },
 ];
 
 function AppearanceGroup({ store }) {
@@ -104,6 +119,8 @@ function AppearanceGroup({ store }) {
   const layout = getPageLayout(preferences);
   const order = getCombinedOrder(preferences);
   const opening = getOpeningPage(preferences);
+  const pageOrder = getPageOrder(preferences);
+  const addBarOrder = getAddBarOrder(preferences);
   return (
     <section className="m-section">
       <h2 className="m-section-title" id="appearance-title">
@@ -130,14 +147,39 @@ function AppearanceGroup({ store }) {
             <p className="settings-appearance-hint">Which section comes first on the combined page.</p>
           </div>
         ) : (
-          <div className="settings-subsetting">
-            <p className="settings-subsetting-label" id="opening-page-label">
-              Opening page
-            </p>
-            <SegmentedControl options={OPENING_OPTIONS} value={opening} onChange={store.setOpeningPage} label="Opening page" />
-            <p className="settings-appearance-hint">The page Habit opens on next time.</p>
-          </div>
+          <>
+            <div className="settings-subsetting">
+              <p className="settings-subsetting-label" id="page-order-label">
+                Page order
+              </p>
+              <SegmentedControl options={PAGE_ORDER_OPTIONS} value={pageOrder} onChange={store.setPageOrder} label="Page order" />
+              <p className="settings-appearance-hint">The order of the Tasks and Habit pages in the tab bar.</p>
+            </div>
+            <div className="settings-subsetting">
+              <p className="settings-subsetting-label" id="opening-page-label">
+                Opening page
+              </p>
+              <SegmentedControl options={OPENING_OPTIONS} value={opening} onChange={store.setOpeningPage} label="Opening page" />
+              <p className="settings-appearance-hint">The page the app opens on next time.</p>
+            </div>
+          </>
         )}
+        <div className="settings-subsetting">
+          <p className="settings-subsetting-label" id="add-bar-order-label">
+            Add New - Order
+          </p>
+          <SegmentedControl
+            options={ADD_BAR_ORDER_OPTIONS}
+            value={addBarOrder}
+            onChange={store.setAddBarOrder}
+            label="Add New - Order"
+          />
+          <p className="settings-appearance-hint">
+            {addBarOrder === 'tasks-first'
+              ? 'Task on the left of the Add new bar and first in Add new; Habit on the right.'
+              : 'Habit on the left of the Add new bar and first in Add new; Task on the right.'}
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -214,7 +256,7 @@ export function SettingsScreen({ store, confirm, backup }) {
       </Group>
 
       <p className="settings-version">
-        Habit · version {__APP_VERSION__} · built {BUILD_LABEL}
+        mink · version {__APP_VERSION__} · built {BUILD_LABEL}
       </p>
     </div>
   );

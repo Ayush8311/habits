@@ -2,7 +2,7 @@
 <resources>
 
     <!-- DayNight, so the WebView reports the phone's light/dark setting to the page
-         (prefers-color-scheme). Habit's Settings → Appearance → System depends on it; with
+         (prefers-color-scheme). the app's Settings → Appearance → System depends on it; with
          the old Light-only theme the WebView always said "light". The page draws its own
          dark theme, and the WebView's automatic darkening stays off (the default for apps
          targeting Android 13+). -->
@@ -19,7 +19,7 @@
         <item name="android:windowBackground">@color/habit_background</item>
     </style>
 
-    <!-- Launch screen: the Habit mark on the app background. Android 12+ draws it with the
+    <!-- Launch screen: the mink logo on the app background. Android 12+ draws it with the
          system splash screen; older versions show the same layout from @drawable/splash. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/habit_background</item>

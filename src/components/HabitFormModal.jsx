@@ -140,7 +140,9 @@ export function HabitFormModal({ habit, stats, monthName, existingNames, onSubmi
                 maxLength={MAX_NAME_LENGTH}
                 placeholder="e.g. Drink water"
                 autoComplete="off"
-                data-autofocus
+                // A new habit starts in Name, with the keyboard. Editing opens with
+                // nothing focused for typing: the keyboard stays down until Name is tapped.
+                data-autofocus={isEditing ? undefined : true}
                 aria-invalid={Boolean(error)}
                 aria-describedby={error ? errorId : undefined}
                 onChange={(event) => {

@@ -8,12 +8,17 @@ import './AddActionBar.css';
 const COMMIT_ANIMATION = 170;
 const REOPEN_LOCK = 700;
 
+const LABELS = { habit: 'Habit', task: 'Task' };
+
 /**
- * The Today screen's add control. Tap: the Add new sheet. Swipe right: New Task.
- * Swipe left: New Habit. The knob follows the finger through direct style writes
+ * The add control. Tap: the Add new sheet. Swipe towards a side: that side's kind
+ * (Habit on the left and Task on the right by default; `order` 'tasks-first' swaps
+ * them, from Settings). The knob follows the finger through direct style writes
  * (no React render per move), and each gesture can open at most one form.
  */
-export const AddActionBar = memo(function AddActionBar({ onTap, onSwipeRight, onSwipeLeft }) {
+export const AddActionBar = memo(function AddActionBar({ order = 'habits-first', onTap, onTask, onHabit }) {
+  const left = order === 'tasks-first' ? 'task' : 'habit';
+  const right = left === 'task' ? 'habit' : 'task';
   const barRef = useRef(null);
   const knobRef = useRef(null);
   const maskRef = useRef(null);
@@ -76,10 +81,13 @@ export const AddActionBar = memo(function AddActionBar({ onTap, onSwipeRight, on
     }
     lockedUntil.current = Date.now() + REOPEN_LOCK;
     tapFeedback();
-    setOffset(target === 'task' ? max : -max, true);
+    // resolveSwipe answers by side: 'task' is the right side, 'habit' the left.
+    const side = target === 'task' ? 'right' : 'left';
+    const kind = side === 'right' ? right : left;
+    setOffset(side === 'right' ? max : -max, true);
     window.setTimeout(
       () => {
-        (target === 'task' ? onSwipeRight : onSwipeLeft)();
+        (kind === 'task' ? onTask : onHabit)();
         setOffset(0, false);
       },
       reducedMotion ? 0 : COMMIT_ANIMATION,
@@ -143,7 +151,7 @@ export const AddActionBar = memo(function AddActionBar({ onTap, onSwipeRight, on
         type="button"
         className="add-bar"
         aria-haspopup="dialog"
-        aria-label="Add new. Opens a choice of habit or task. Swipe right for a new task, or left for a new habit."
+        aria-label={`Add new. Opens a choice of habit or task. Swipe right for a new ${right}, or left for a new ${left}.`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -161,16 +169,16 @@ export const AddActionBar = memo(function AddActionBar({ onTap, onSwipeRight, on
       >
         <span className="add-bar-hint is-left" aria-hidden="true">
           <ChevronLeft size={17} strokeWidth={2.2} />
-          Habit
+          {LABELS[left]}
         </span>
         <span ref={knobRef} className="add-bar-knob" aria-hidden="true">
           <span ref={maskRef} className="add-bar-knob-mask">
             <span className="add-bar-hint is-left">
               <ChevronLeft size={17} strokeWidth={2.2} />
-              Habit
+              {LABELS[left]}
             </span>
             <span className="add-bar-hint is-right">
-              Task
+              {LABELS[right]}
               <ChevronRight size={17} strokeWidth={2.2} />
             </span>
           </span>
@@ -180,7 +188,7 @@ export const AddActionBar = memo(function AddActionBar({ onTap, onSwipeRight, on
           </span>
         </span>
         <span className="add-bar-hint is-right" aria-hidden="true">
-          Task
+          {LABELS[right]}
           <ChevronRight size={17} strokeWidth={2.2} />
         </span>
       </button>

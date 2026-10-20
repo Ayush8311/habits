@@ -17,7 +17,7 @@ npm test           # unit tests for dates, streaks, stats and storage
 npm run build      # production build + service worker in dist/
 npm run preview    # serve dist/ at http://localhost:4173 — use this to test offline and installing
 npm run verify     # check dist/: manifest, icons, service worker, linked assets
-npm run icons      # regenerate every icon in public/ from assets/habit-icon.svg
+npm run icons      # regenerate every icon in public/ and android/ from assets/mink-logo-original.png
 ```
 
 To try the mobile layout on a computer, narrow the browser window or use the device toolbar
@@ -117,7 +117,7 @@ button; backups are saved through Android's share sheet.
 - Version: `versionName` is `package.json`'s `version`, and
   `versionCode = MAJOR×10000 + MINOR×100 + PATCH` (1.0.1 → 10001), set in
   `android/app/build.gradle`. Bump `package.json` and both follow.
-- Icons and launch screen come from `assets/habit-icon.svg` via `npm run icons`.
+- Icons and launch screen come from the mink logo, `assets/mink-logo-original.png`, via `npm run icons`.
 - Permissions: only `INTERNET` (Capacitor's default; Habit makes no network requests).
 
 ### Set up Android tools (once)
@@ -334,7 +334,8 @@ src/
   lib/                       pure logic: dates, stats, insights, schedules, tasks, theme,
                              storage validation, backup
   pwa.js                     service worker registration, install prompt
-assets/habit-icon.svg        master app icon (edit this, then `npm run icons`)
+assets/mink-logo-original.png  the mink logo as supplied (replace it, then `npm run icons`)
+assets/mink-logo.png           the logo without its background (generated)
 scripts/generate-icons.mjs   renders public/ icons from the master (192/512, maskable 512,
                              Apple touch 180, favicon 32 and SVG) and the Android launcher icons
 scripts/android-apk.sh       names, packages and verifies APKs (used by the APK workflow)

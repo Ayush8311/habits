@@ -51,7 +51,7 @@ export function DesktopApp({ store, todayKey }) {
 
   const { openHabitForm, confirm, dialogs } = useHabitDialogs({ store, todayKey, monthKeys, monthKey: cursorKey });
   const backup = useBackupActions({ store, confirm });
-  const { openTaskForm, taskDialog } = useTaskDialogs({ store, todayKey, confirm });
+  const { openTaskForm, openPostpone, taskDialog } = useTaskDialogs({ store, todayKey, confirm });
   const installFlow = useInstallFlow();
 
   return (
@@ -121,7 +121,13 @@ export function DesktopApp({ store, todayKey }) {
           onAddHabit={() => openHabitForm()}
         />
 
-        <TasksSection store={store} todayKey={todayKey} onAddTask={openTaskForm} onEditTask={openTaskForm} />
+        <TasksSection
+          store={store}
+          todayKey={todayKey}
+          onAddTask={openTaskForm}
+          onEditTask={openTaskForm}
+          onPostponeTask={openPostpone}
+        />
 
         <InsightsSection habits={habits} completions={completions} todayKey={todayKey} cursorKey={cursorKey} />
       </main>

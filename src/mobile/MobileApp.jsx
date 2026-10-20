@@ -6,21 +6,21 @@ import { useHabitDialogs } from '../components/useHabitDialogs.jsx';
 import { usePrefersReducedMotion } from '../hooks/useMediaQuery.js';
 import { useOnlineStatus } from '../hooks/useOnlineStatus.js';
 import { getMonthDays, getMonthOf } from '../lib/dates.js';
-import { getPageLayout, launchTab } from '../lib/preferences.js';
+import { containerTransform } from '../lib/containerTransform.js';
+import { getAddBarOrder, getPageLayout, launchTab, tabOrder } from '../lib/preferences.js';
+import { cx } from '../lib/classNames.js';
 import { eligibleKeys } from '../lib/stats.js';
 import { AddActionBar } from './AddActionBar.jsx';
 import { AddNewSheet } from './AddNewSheet.jsx';
-import { BottomNav, TABS } from './BottomNav.jsx';
+import { BottomNav, buildTabs } from './BottomNav.jsx';
 import { CalendarScreen } from './screens/CalendarScreen.jsx';
 import { InsightsScreen } from './screens/InsightsScreen.jsx';
 import { SettingsScreen } from './screens/SettingsScreen.jsx';
-import { TasksScreen } from './screens/TasksScreen.jsx';
+import { INBOX, TasksScreen } from './screens/TasksScreen.jsx';
 import { TodayScreen } from './screens/TodayScreen.jsx';
 import './MobileApp.css';
 
 const hashTab = () => window.location.hash.replace(/^#\/?/, '');
-/** The tabs of a page layout: Combined has no Tasks tab (tasks are on its Home page). */
-const tabsFor = (layout) => (layout === 'combined' ? TABS.filter((item) => item.id !== 'tasks') : TABS);
 const readTab = (tabIds) => {
   const tab = hashTab();
   return tabIds.includes(tab) ? tab : 'today';
@@ -35,8 +35,12 @@ const readTab = (tabIds) => {
 export function MobileApp({ store, todayKey }) {
   const { preferences } = store.state;
   const layout = getPageLayout(preferences);
-  const tabs = useMemo(() => tabsFor(layout), [layout]);
-  const tabIds = useMemo(() => tabs.map((item) => item.id), [tabs]);
+  const combined = layout === 'combined';
+  const addBarOrder = getAddBarOrder(preferences);
+  // Tab ids in the order chosen in Settings (Separate: Tasks/Habit either way round).
+  const tabKey = tabOrder(preferences).join();
+  const tabIds = useMemo(() => tabKey.split(','), [tabKey]);
+  const tabs = useMemo(() => buildTabs(tabIds, layout), [tabIds, layout]);
   // Launch page: a #/page link if present, else Combined's Home or the chosen opening
   // page. Read once; changing the setting later doesn't move the user.
   const [tab, setTab] = useState(() => launchTab(preferences, hashTab(), tabIds));
@@ -45,6 +49,8 @@ export function MobileApp({ store, todayKey }) {
   // Calendar position survives switching tabs.
   const [calendarCursor, setCalendarCursor] = useState(todayKey);
   const [calendarView, setCalendarView] = useState('month');
+  // The task list opened on the Tasks page (a list id, INBOX or null), kept across pages.
+  const [openList, setOpenList] = useState(null);
   const online = useOnlineStatus();
   const reducedMotion = usePrefersReducedMotion();
 
@@ -56,19 +62,27 @@ export function MobileApp({ store, todayKey }) {
   );
   const { openHabitForm, confirm, dialogs } = useHabitDialogs({ store, todayKey, monthKeys, monthKey: todayKey });
   const backup = useBackupActions({ store, confirm });
-  const { openTaskForm, taskDialog } = useTaskDialogs({ store, todayKey, confirm });
+  const onListDeleted = useCallback((id) => setOpenList((current) => (current === id ? null : current)), []);
+  const { openTaskForm, openPostpone, openListForm, taskDialog } = useTaskDialogs({
+    store,
+    todayKey,
+    confirm,
+    onListDeleted,
+  });
+  const openListRef = useRef(openList);
+  openListRef.current = openList;
 
   // Add new: the chosen form opens only after the sheet has fully closed, so the
   // sheet's focus restore can't pull focus away from the new form.
   const [addingNew, setAddingNew] = useState(false);
   const addChoice = useRef(null);
+  const createRef = useRef(null); // { habit, task }, set below
   const closeAddNew = useCallback(() => {
     const choice = addChoice.current;
     addChoice.current = null;
     setAddingNew(false);
-    if (choice === 'habit') openHabitForm();
-    if (choice === 'task') openTaskForm();
-  }, [openHabitForm, openTaskForm]);
+    if (choice) createRef.current[choice]();
+  }, []);
 
   // Reflect the tab in the URL without adding history entries, and follow
   // links that change it (for example #/calendar).
@@ -122,9 +136,91 @@ export function MobileApp({ store, todayKey }) {
     [navigate],
   );
   const openAddNew = useCallback(() => setAddingNew(true), []);
-  const newTask = useCallback(() => openTaskForm(), [openTaskForm]);
-  const newHabit = useCallback(() => openHabitForm(), [openHabitForm]);
   const openCalendar = useCallback(() => navigate('calendar'), [navigate]);
+
+  // Combined page: bring a section (Habits or Tasks) into view, smoothly, then run
+  // `then`. Measured from the section's real position, so it works with either
+  // section order and any screen size; already in view → no scrolling at all.
+  const revealSection = useCallback((sectionId, then) => {
+    const section = document.getElementById(sectionId);
+    if (!section) {
+      then();
+      return;
+    }
+    const top = section.getBoundingClientRect().top;
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    const target = Math.max(0, Math.min(maxScroll, window.scrollY + top - 12));
+    const inView = top >= 0 && top < window.innerHeight * 0.45;
+    if (inView || Math.abs(target - window.scrollY) < 4) {
+      then();
+      return;
+    }
+    if (reducedMotionRef.current) {
+      window.scrollTo(0, target);
+      then();
+      return;
+    }
+    let finished = false;
+    let timer = 0;
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      window.clearTimeout(timer);
+      window.removeEventListener('scrollend', finish);
+      then();
+    };
+    window.addEventListener('scrollend', finish);
+    timer = window.setTimeout(finish, 650); // where scrollend isn't supported
+    window.scrollTo({ top: target, behavior: 'smooth' });
+  }, []);
+
+  // Creating a habit or a task always happens where that kind of item lives:
+  // Separate pages → switch to the Habit or Tasks page first (no switch when already
+  // there); Combined page → scroll to its Habits or Tasks section. The form that
+  // opens is always the kind that was chosen.
+  const newHabit = useCallback(() => {
+    if (combined) {
+      revealSection('home-habits', () => openHabitForm());
+      return;
+    }
+    navigate('today');
+    openHabitForm();
+  }, [combined, navigate, openHabitForm, revealSection]);
+  const newTask = useCallback(() => {
+    if (combined) {
+      revealSection('home-tasks', () => openTaskForm());
+      return;
+    }
+    navigate('tasks');
+    // A new task from inside an opened list goes into that list.
+    const list = openListRef.current;
+    openTaskForm(null, { listId: list && list !== INBOX ? list : undefined });
+  }, [combined, navigate, openTaskForm, revealSection]);
+  createRef.current = { habit: newHabit, task: newTask };
+  const addTaskToList = useCallback((listId) => openTaskForm(null, { listId }), [openTaskForm]);
+  const newList = useCallback(() => openListForm(null, { onCreated: (id) => setOpenList(id) }), [openListForm]);
+
+  // Opening a list card: the card grows into the list's page; Back shrinks the page
+  // into its card again, at the scroll position the overview was left at.
+  const overviewScroll = useRef(0);
+  const showList = useCallback((id, from) => {
+    const previous = openListRef.current;
+    if (id === previous) return;
+    const opening = id !== null;
+    if (opening) overviewScroll.current = window.scrollY;
+    containerTransform({
+      from,
+      direction: opening ? 'open' : 'close',
+      reducedMotion: reducedMotionRef.current,
+      update: () => setOpenList(id),
+      after: () => window.scrollTo(0, opening ? 0 : overviewScroll.current),
+      to: () =>
+        opening
+          ? document.getElementById('m-screen')
+          : document.querySelector(`[data-list-card="${CSS.escape(previous ?? '')}"]`),
+    });
+  }, []);
+  const editList = useCallback((listId) => openListForm(listId), [openListForm]);
 
   // The Add new bar lives where things get added: Today, and Tasks in the Separate layout.
   const showAddBar = tab === 'today' || tab === 'tasks';
@@ -139,11 +235,24 @@ export function MobileApp({ store, todayKey }) {
         onEditHabit={openHabitForm}
         onAddTask={openTaskForm}
         onEditTask={openTaskForm}
+        onPostponeTask={openPostpone}
         onOpenCalendar={openCalendar}
         scrollToTasks={scrollToTasks}
       />
     ),
-    tasks: <TasksScreen store={store} todayKey={todayKey} onAddTask={openTaskForm} onEditTask={openTaskForm} />,
+    tasks: (
+      <TasksScreen
+        store={store}
+        todayKey={todayKey}
+        openList={openList}
+        onOpenList={showList}
+        onAddTask={addTaskToList}
+        onEditTask={openTaskForm}
+        onPostponeTask={openPostpone}
+        onNewList={newList}
+        onEditList={editList}
+      />
+    ),
     calendar: (
       <CalendarScreen
         store={store}
@@ -181,17 +290,22 @@ export function MobileApp({ store, todayKey }) {
         </div>
       )}
 
-      <main key={tab} className={showAddBar ? 'm-screen has-add-bar' : 'm-screen'} id="m-screen">
+      <main
+        key={tab}
+        className={cx('m-screen', showAddBar && 'has-add-bar', tab === 'tasks' && openList && 'is-list-view')}
+        id="m-screen"
+      >
         {screens[tab]}
       </main>
 
       {showAddBar && (
-        <AddActionBar onTap={openAddNew} onSwipeRight={newTask} onSwipeLeft={newHabit} />
+        <AddActionBar order={addBarOrder} onTap={openAddNew} onTask={newTask} onHabit={newHabit} />
       )}
       <BottomNav tabs={tabs} active={tab} onSelect={selectTab} />
       {backup.fileInput}
       {addingNew && (
         <AddNewSheet
+          order={addBarOrder}
           onChoose={(choice) => {
             addChoice.current = choice;
           }}

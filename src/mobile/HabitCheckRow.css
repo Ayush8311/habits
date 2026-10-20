@@ -6,6 +6,7 @@
 }
 
 .check-row-item {
+  --swipe-left-color: var(--color-text-secondary);
   position: relative;
   display: flex;
   align-items: stretch;
@@ -31,10 +32,11 @@
   min-height: 68px;
   padding: var(--space-3) var(--space-4);
   border: 0;
-  background: transparent;
+  /* Opaque: it slides over the swipe actions (see SwipeRow.css). */
+  background: var(--color-surface);
+  color: inherit;
   text-align: left;
   cursor: pointer;
-  touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
   transition: background-color var(--duration-fast) var(--ease-out);

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { appReducer } from '../data/appReducer.js';
 import { habitRepository } from '../data/repository.js';
 import { createDefaultState, loadInitialState } from '../data/defaultHabits.js';
-import { getTodayKey } from '../lib/dates.js';
+import { getTodayKey, isDateKey } from '../lib/dates.js';
 import {
   DEFAULT_COLOR,
   DEFAULT_ICON,
@@ -54,6 +54,11 @@ export function useHabitStore(repository = habitRepository) {
         if (dateKey > getTodayKey()) return; // Future days cannot be checked off.
         dispatch({ type: 'toggle', habitId, dateKey });
       },
+      /** Marks one habit done (or not) on one day, whatever it was before. */
+      setCompletion(habitId, dateKey, done) {
+        if (dateKey > getTodayKey()) return;
+        dispatch({ type: 'setCompletion', habitId, dateKey, done });
+      },
       addHabit(fields) {
         dispatch({ type: 'add', habit: { id: createId(), createdAt: getTodayKey(), ...normaliseFields(fields) } });
       },
@@ -82,7 +87,10 @@ export function useHabitStore(repository = habitRepository) {
       // Tasks never touch habits or check-ins. `id` is created when a form opens,
       // so submitting twice dispatches the same task and the second is ignored.
       addTask(id, fields) {
-        dispatch({ type: 'addTask', task: { id, ...normaliseTaskFields(fields), completedAt: null, createdAt: Date.now() } });
+        dispatch({
+          type: 'addTask',
+          task: { id, ...normaliseTaskFields(fields), listId: fields.listId ?? undefined, completedAt: null, createdAt: Date.now() },
+        });
       },
       updateTask(id, fields) {
         dispatch({ type: 'updateTask', id, fields });
@@ -92,6 +100,24 @@ export function useHabitStore(repository = habitRepository) {
       },
       deleteTask(id) {
         dispatch({ type: 'deleteTask', id });
+      },
+      /** Moves a task to another day; its time, list, priority and notes stay. */
+      postponeTask(id, dateKey) {
+        if (!isDateKey(dateKey)) return;
+        dispatch({ type: 'updateTask', id, fields: { dueDate: dateKey } });
+      },
+      /** Returns the new list's id. */
+      addTaskList(name) {
+        const id = createId();
+        dispatch({ type: 'addTaskList', list: { id, name, createdAt: Date.now() } });
+        return id;
+      },
+      renameTaskList(id, name) {
+        dispatch({ type: 'renameTaskList', id, name });
+      },
+      /** The list goes; its tasks stay, in no list. */
+      deleteTaskList(id) {
+        dispatch({ type: 'deleteTaskList', id });
       },
       /** `ids` in their new order; habits not listed keep their places. */
       reorderHabits(ids) {
@@ -113,6 +139,12 @@ export function useHabitStore(repository = habitRepository) {
       },
       setOpeningPage(page) {
         dispatch({ type: 'setOpeningPage', page });
+      },
+      setAddBarOrder(order) {
+        dispatch({ type: 'setAddBarOrder', order });
+      },
+      setPageOrder(order) {
+        dispatch({ type: 'setPageOrder', order });
       },
     }),
     [],
